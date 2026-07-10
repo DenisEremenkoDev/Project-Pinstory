@@ -1,15 +1,14 @@
+import { BrowserRouter } from 'react-router'
 import { useTheme } from '../features/theme/useTheme'
+import { AppRoutes } from './AppRoutes'
 
 function App() {
-  const { mode, toggle } = useTheme()
+  useTheme()
 
   return (
-    <>
-      <h1>Pinstory</h1>
-      <button type="button" onClick={toggle}>
-        {mode === 'light' ? 'Тёмная тема' : 'Светлая тема'}
-      </button>
-    </>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <AppRoutes />
+    </BrowserRouter>
   )
 }
 

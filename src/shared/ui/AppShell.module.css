@@ -1,0 +1,4 @@
+.content {
+  min-height: 100vh;
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
