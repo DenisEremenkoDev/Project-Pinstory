@@ -1,0 +1,99 @@
+:root {
+  /* Colors — light theme */
+  --color-primary: #4f46e5;
+  --color-primary-hover: #4338ca;
+  --color-primary-subtle: #eeecfd;
+
+  --color-accent: #14b8a6;
+  --color-accent-subtle: #e1f7f3;
+
+  --color-highlight: #f59e0b;
+  --color-highlight-subtle: #fef3e2;
+
+  --color-canvas: #fbfaf9;
+  --color-surface-raised: #ffffff;
+  --color-surface-sunken: #f3f1ee;
+  --color-border: #e8e5e1;
+
+  --color-text-primary: #1c1b1a;
+  --color-text-secondary: #6b6660;
+
+  --color-success: #16a34a;
+  --color-success-subtle: #4ade80;
+  --color-danger: #e11d48;
+  --color-danger-subtle: #fb7185;
+
+  /* Map — muted basemap */
+  --color-map-land: #f1efea;
+  --color-map-water: #dcedeb;
+
+  /* Typography */
+  --font-ui: 'Plus Jakarta Sans', sans-serif;
+  --font-memory: 'Newsreader', serif;
+
+  --text-display: 800 34px/40px var(--font-ui);
+  --text-title1: 700 28px/34px var(--font-ui);
+  --text-title2: 700 22px/28px var(--font-ui);
+  --text-title3: 600 18px/24px var(--font-ui);
+  --text-body: 500 16px/24px var(--font-ui);
+  --text-caption: 600 13px/18px var(--font-ui);
+  --text-micro: 700 11px/14px var(--font-ui);
+  --text-memory-quote: italic 400 20px/28px var(--font-memory);
+
+  /* Spacing — 8pt grid */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --space-9: 48px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-card: 20px;
+
+  /* Shadows — soft, warm, NOT black */
+  --shadow-sm: 0 1px 2px rgba(28, 20, 10, 0.06);
+  --shadow-md: 0 4px 10px rgba(28, 20, 10, 0.08);
+  --shadow-lg: 0 8px 24px rgba(28, 20, 10, 0.1);
+  --shadow-xl: 0 16px 40px rgba(28, 20, 10, 0.14);
+}
+
+[data-theme='dark'] {
+  --color-canvas: #12110f;
+  --color-surface-raised: #1b1a17;
+  --color-surface-sunken: #211f1c;
+  --color-border: #322f2a;
+
+  --color-primary: #7c74f0;
+  --color-primary-hover: #948cf3;
+  --color-primary-subtle: #2a2650;
+
+  --color-accent: #2dd4bf;
+  --color-accent-subtle: #1a3a37;
+
+  --color-highlight: #f59e0b;
+  --color-highlight-subtle: #3a2c14;
+
+  --color-text-primary: #f5f3ef;
+  --color-text-secondary: #b4afa7;
+
+  --color-success: #4ade80;
+  --color-success-subtle: #163a24;
+  --color-danger: #fb7185;
+  --color-danger-subtle: #3a1620;
+
+  --color-map-land: #2a2825;
+  --color-map-water: #16302d;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 10px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.32);
+  --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.4);
+}
