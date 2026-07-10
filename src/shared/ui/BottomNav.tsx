@@ -9,7 +9,7 @@ interface NavTab {
 
 const tabs: NavTab[] = [
   { to: '/map', label: 'Карта', icon: 'map' },
-  { to: '/feed', label: 'Для вас', icon: 'explore' },
+  { to: '/feed', label: 'Хроника', icon: 'timeline' },
 ]
 
 const tabsAfterAdd: NavTab[] = [
@@ -17,11 +17,11 @@ const tabsAfterAdd: NavTab[] = [
   { to: '/profile', label: 'Профиль', icon: 'person' },
 ]
 
-function handleAddPlace() {
-  // TODO: open the "add place" bottom sheet once the places feature is implemented
+interface BottomNavProps {
+  onAddPlace: () => void
 }
 
-export function BottomNav() {
+export function BottomNav({ onAddPlace }: BottomNavProps) {
   return (
     <nav className={styles.nav}>
       {tabs.map((tab) => (
@@ -47,7 +47,7 @@ export function BottomNav() {
         <button
           type="button"
           className={styles.addButton}
-          onClick={handleAddPlace}
+          onClick={onAddPlace}
           aria-label="Добавить место"
         >
           <span className="material-symbols-rounded">add</span>

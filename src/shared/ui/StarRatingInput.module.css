@@ -1,0 +1,21 @@
+.stars {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.star {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: var(--space-1);
+  color: var(--color-border);
+  display: flex;
+}
+
+.star.filled {
+  color: var(--color-highlight);
+}
+
+.star :global(.material-symbols-rounded) {
+  font-size: 32px;
+}

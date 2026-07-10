@@ -12,6 +12,7 @@ export interface MockRouteContext {
   pathParams: Record<string, string>
   searchParams: URLSearchParams
   body: unknown
+  currentUserId: string | null
 }
 
 export type MockResult = { data: unknown } | { error: { status: number; data: ApiErrorBody } }
@@ -23,7 +24,7 @@ export interface MockRoute {
   handler: MockHandler
 }
 
-export type MockBaseQuery = BaseQueryFn<MockRequestArgs, unknown, { status: number; data: ApiErrorBody }>
+export type MockBaseQuery = BaseQueryFn<string | MockRequestArgs, unknown, { status: number; data: ApiErrorBody }>
 
 export function defineMockRoute(method: string, path: string, handler: MockHandler): MockRoute {
   return { method: method.toUpperCase(), segments: path.split('/').filter(Boolean), handler }
@@ -56,15 +57,26 @@ function matchRoute(route: MockRoute, method: string, pathSegments: string[]): R
   return pathParams
 }
 
+const MOCK_TOKEN_PREFIX = 'mock-token-'
+
+// Mirrors how a real backend reads the user id out of a JWT — mock tokens
+// are just "mock-token-<userId>" (see auth.mockRoutes.ts). This detail is
+// mock-only; it disappears entirely once fetchBaseQuery + a real JWT take over.
+function getUserIdFromMockToken(accessToken: string | null): string | null {
+  if (!accessToken?.startsWith(MOCK_TOKEN_PREFIX)) return null
+  return accessToken.slice(MOCK_TOKEN_PREFIX.length)
+}
+
 /**
  * Simulates a network layer for RTK Query. Swapping to a real backend later
  * means replacing this baseQuery with fetchBaseQuery({ baseUrl: ... }) in
  * src/app/api.ts — endpoint definitions and components don't change.
  */
 export function createMockBaseQuery(routes: MockRoute[]): MockBaseQuery {
-  return async (args) => {
+  return async (rawArgs, baseQueryApi) => {
     await delay(200 + Math.random() * 200)
 
+    const args: MockRequestArgs = typeof rawArgs === 'string' ? { url: rawArgs } : rawArgs
     const method = (args.method ?? 'GET').toUpperCase()
     const [pathname = '', queryString] = args.url.split('?')
     const pathSegments = pathname.split('/').filter(Boolean)
@@ -75,12 +87,15 @@ export function createMockBaseQuery(routes: MockRoute[]): MockBaseQuery {
       }
     }
 
+    const state = baseQueryApi.getState() as { auth?: { accessToken?: string | null } }
+    const currentUserId = getUserIdFromMockToken(state.auth?.accessToken ?? null)
+
     for (const route of routes) {
       const pathParams = matchRoute(route, method, pathSegments)
       if (!pathParams) continue
 
       try {
-        const result = route.handler({ pathParams, searchParams, body: args.body })
+        const result = route.handler({ pathParams, searchParams, body: args.body, currentUserId })
         if ('error' in result) return result
         return { data: result.data }
       } catch (err) {

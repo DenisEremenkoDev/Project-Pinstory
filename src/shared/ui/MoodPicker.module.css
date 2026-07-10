@@ -1,0 +1,22 @@
+.moods {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.mood {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--color-surface-sunken);
+  cursor: pointer;
+}
+
+.mood.selected {
+  border-color: var(--color-primary);
+  background: var(--color-primary-subtle);
+}
