@@ -26,6 +26,7 @@ TESTING_PLAN.md
 DEPLOYMENT.md
 README_TEMPLATE.md
 PINSTORY_PROJECT_SUMMARY_PROMPT.md
+design-reference/
 
 # Editor directories and files
 .vscode/*
