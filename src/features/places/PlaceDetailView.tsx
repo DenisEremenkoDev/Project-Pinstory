@@ -1,13 +1,18 @@
-import { MOOD_EMOJI, MOOD_LABELS } from '../../shared/lib/apiTypes'
+import { MOOD_EMOJI, MOOD_LABELS, PLACE_STATUS_LABELS, type PlaceStatus } from '../../shared/lib/apiTypes'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
+import { gradientForId } from '../../shared/lib/gradientPalette'
 import { Loader } from '../../shared/ui/Loader'
+import { PlaceComments } from './PlaceComments'
 import {
   useClearFeedbackMutation,
   useDeletePlaceMutation,
   useGetPlaceQuery,
   useSetFeedbackMutation,
+  useUpdatePlaceMutation,
 } from './placesApi'
 import styles from './PlaceDetailView.module.css'
+
+const STATUS_OPTIONS = Object.entries(PLACE_STATUS_LABELS) as [PlaceStatus, string][]
 
 interface PlaceDetailViewProps {
   placeId: string
@@ -19,6 +24,7 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
   const [setFeedback] = useSetFeedbackMutation()
   const [clearFeedback] = useClearFeedbackMutation()
   const [deletePlace] = useDeletePlaceMutation()
+  const [updatePlace] = useUpdatePlaceMutation()
 
   if (isLoading || !place) {
     return (
@@ -32,6 +38,14 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
     if (place.myFeedback === null) setFeedback({ placeId, sentiment: 'like' })
     else if (place.myFeedback === 'like') setFeedback({ placeId, sentiment: 'dislike' })
     else clearFeedback(placeId)
+  }
+
+  function handleStatusTap(status: PlaceStatus) {
+    updatePlace({ id: placeId, status })
+  }
+
+  function handleRatingTap(rating: number) {
+    updatePlace({ id: placeId, rating })
   }
 
   async function handleDelete() {
@@ -49,7 +63,10 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
 
   return (
     <div className={styles.overlay}>
-      <div className={styles.photo}>
+      <div
+        className={styles.photo}
+        style={place.photoUrl ? undefined : { background: gradientForId(place.id) }}
+      >
         {place.photoUrl ? (
           <img src={place.photoUrl} alt={place.name} className={styles.photoImg} />
         ) : (
@@ -64,14 +81,16 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
             <button type="button" className={styles.iconButton} aria-label="Поделиться">
               <span className="material-symbols-rounded">ios_share</span>
             </button>
-            <button
-              type="button"
-              className={styles.iconButton}
-              aria-label="Удалить"
-              onClick={handleDelete}
-            >
-              <span className="material-symbols-rounded">delete</span>
-            </button>
+            {place.isOwner && (
+              <button
+                type="button"
+                className={styles.iconButton}
+                aria-label="Удалить"
+                onClick={handleDelete}
+              >
+                <span className="material-symbols-rounded">delete</span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -84,15 +103,49 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
 
         <span className={styles.title}>{place.name}</span>
 
+        {place.isOwner && (
+          <div className={styles.statusRow}>
+            {STATUS_OPTIONS.map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                className={`${styles.statusChip} ${place.status === value ? styles.statusChipActive : ''}`}
+                onClick={() => handleStatusTap(value)}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+
         <div className={styles.ratingRow}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <span
-              key={star}
-              className={`material-symbols-rounded ${star <= place.rating ? `material-symbols-rounded--filled ${styles.filled}` : ''}`}
-            >
-              star
-            </span>
-          ))}
+          {[1, 2, 3, 4, 5].map((star) =>
+            place.isOwner ? (
+              <button
+                key={star}
+                type="button"
+                className={styles.starButton}
+                aria-label={`Оценить на ${star}`}
+                onClick={() => handleRatingTap(star)}
+              >
+                <span
+                  className={`material-symbols-rounded ${star <= place.rating ? `material-symbols-rounded--filled ${styles.filled}` : ''}`}
+                >
+                  star
+                </span>
+              </button>
+            ) : (
+              <span
+                key={star}
+                className={`material-symbols-rounded ${star <= place.rating ? `material-symbols-rounded--filled ${styles.filled}` : ''}`}
+              >
+                star
+              </span>
+            ),
+          )}
+          <span className={styles.ratingLabel}>
+            {place.rating > 0 ? place.rating.toFixed(1) : 'Оцените место'}
+          </span>
         </div>
 
         {place.note && <p className={styles.note}>«{place.note}»</p>}
@@ -116,6 +169,8 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
             {feedbackChip.label}
           </button>
         </div>
+
+        <PlaceComments placeId={placeId} />
 
         {place.tags.length > 0 && (
           <div className={styles.tags}>

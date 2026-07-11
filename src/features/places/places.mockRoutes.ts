@@ -1,5 +1,5 @@
 import { defineMockRoute, mockError, type MockRoute } from '../../shared/lib/mockBaseQuery'
-import { mockDb, nextMockId, type MockPlace } from '../../shared/lib/mockDb'
+import { mockDb, nextMockId, type MockPlace, type MockPlaceComment } from '../../shared/lib/mockDb'
 import type { Mood, PlaceStatus, Sentiment, Visibility } from '../../shared/lib/apiTypes'
 
 const STATUSES: PlaceStatus[] = ['want_to_visit', 'planned', 'favorite']
@@ -32,6 +32,20 @@ function countFeedback(placeId: string, sentiment: Sentiment): number {
   return mockDb.feedback.filter((f) => f.placeId === placeId && f.sentiment === sentiment).length
 }
 
+function toCommentDto(comment: MockPlaceComment, currentUserId: string | null) {
+  const author = mockDb.users.find((user) => user.id === comment.authorId)
+  return {
+    id: comment.id,
+    authorId: comment.authorId,
+    authorName: author?.displayName ?? 'Пользователь',
+    authorAvatarUrl: author?.avatarUrl ?? null,
+    rating: comment.rating,
+    text: comment.text,
+    createdAt: comment.createdAt,
+    isAuthor: comment.authorId === currentUserId,
+  }
+}
+
 function validateCreateBody(body: CreatePlaceBody): string | null {
   if (!body.name || !body.name.trim()) return 'Название места не может быть пустым'
   if (typeof body.latitude !== 'number' || typeof body.longitude !== 'number') {
@@ -52,7 +66,11 @@ export const placesMockRoutes: MockRoute[] = [
     const places = mockDb.places
       .filter((place) => place.ownerId === currentUserId)
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
-      .map((place) => ({ ...place, myFeedback: getMyFeedback(place.id, currentUserId) }))
+      .map((place) => ({
+        ...place,
+        myFeedback: getMyFeedback(place.id, currentUserId),
+        isOwner: place.ownerId === currentUserId,
+      }))
 
     return { data: { places } }
   }),
@@ -68,7 +86,8 @@ export const placesMockRoutes: MockRoute[] = [
       data: {
         ...place,
         myFeedback: getMyFeedback(place.id, currentUserId),
-        commentsCount: 0,
+        isOwner: place.ownerId === currentUserId,
+        commentsCount: mockDb.comments.filter((c) => c.placeId === place.id).length,
         likesCount: countFeedback(place.id, 'like'),
         dislikesCount: countFeedback(place.id, 'dislike'),
       },
@@ -99,7 +118,7 @@ export const placesMockRoutes: MockRoute[] = [
     }
     mockDb.places.push(place)
 
-    return { data: { ...place, myFeedback: null } }
+    return { data: { ...place, myFeedback: null, isOwner: true } }
   }),
 
   defineMockRoute('PATCH', '/places/:id', ({ pathParams, body, currentUserId }) => {
@@ -107,7 +126,7 @@ export const placesMockRoutes: MockRoute[] = [
     if (!place) return mockError(403, 'Нет прав на редактирование этого места', 'PLACE_FORBIDDEN')
 
     Object.assign(place, body as UpdatePlaceBody)
-    return { data: { ...place, myFeedback: getMyFeedback(place.id, currentUserId) } }
+    return { data: { ...place, myFeedback: getMyFeedback(place.id, currentUserId), isOwner: true } }
   }),
 
   defineMockRoute('DELETE', '/places/:id', ({ pathParams, currentUserId }) => {
@@ -161,5 +180,80 @@ export const placesMockRoutes: MockRoute[] = [
         dislikesCount: countFeedback(place.id, 'dislike'),
       },
     }
+  }),
+
+  defineMockRoute('GET', '/places/:id/comments', ({ pathParams, currentUserId }) => {
+    const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
+    if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
+    if (place.visibility === 'private' && place.ownerId !== currentUserId) {
+      return mockError(403, 'Это место недоступно', 'PLACE_FORBIDDEN')
+    }
+
+    const comments = mockDb.comments
+      .filter((c) => c.placeId === place.id)
+      .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+      .map((c) => toCommentDto(c, currentUserId))
+
+    return { data: { comments } }
+  }),
+
+  defineMockRoute('POST', '/places/:id/comments', ({ pathParams, body, currentUserId }) => {
+    if (!currentUserId) return mockError(401, 'Не авторизован', 'UNAUTHORIZED')
+
+    const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
+    if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
+    if (place.visibility === 'private' && place.ownerId !== currentUserId) {
+      return mockError(403, 'Это место недоступно', 'PLACE_FORBIDDEN')
+    }
+
+    const { rating, text } = body as { rating: number; text: string }
+    if (!text || !text.trim()) return mockError(400, 'Комментарий не может быть пустым', 'VALIDATION_ERROR')
+    if (typeof rating !== 'number' || rating < 1 || rating > 5) {
+      return mockError(400, 'Оценка должна быть от 1 до 5', 'VALIDATION_ERROR')
+    }
+
+    const comment: MockPlaceComment = {
+      id: nextMockId('comment'),
+      placeId: place.id,
+      authorId: currentUserId,
+      rating,
+      text: text.trim(),
+      createdAt: new Date().toISOString(),
+    }
+    mockDb.comments.push(comment)
+
+    return { data: toCommentDto(comment, currentUserId) }
+  }),
+
+  defineMockRoute('PATCH', '/places/:id/comments/:commentId', ({ pathParams, body, currentUserId }) => {
+    if (!currentUserId) return mockError(401, 'Не авторизован', 'UNAUTHORIZED')
+
+    const comment = mockDb.comments.find(
+      (c) => c.id === pathParams.commentId && c.placeId === pathParams.id,
+    )
+    if (!comment) return mockError(404, 'Комментарий не найден', 'COMMENT_NOT_FOUND')
+    if (comment.authorId !== currentUserId) {
+      return mockError(403, 'Можно редактировать только свой комментарий', 'COMMENT_FORBIDDEN')
+    }
+
+    Object.assign(comment, body as Partial<{ rating: number; text: string }>)
+
+    return { data: toCommentDto(comment, currentUserId) }
+  }),
+
+  defineMockRoute('DELETE', '/places/:id/comments/:commentId', ({ pathParams, currentUserId }) => {
+    if (!currentUserId) return mockError(401, 'Не авторизован', 'UNAUTHORIZED')
+
+    const comment = mockDb.comments.find(
+      (c) => c.id === pathParams.commentId && c.placeId === pathParams.id,
+    )
+    if (!comment) return mockError(404, 'Комментарий не найден', 'COMMENT_NOT_FOUND')
+    if (comment.authorId !== currentUserId) {
+      return mockError(403, 'Можно удалить только свой комментарий', 'COMMENT_FORBIDDEN')
+    }
+
+    mockDb.comments = mockDb.comments.filter((c) => c.id !== comment.id)
+
+    return { data: undefined }
   }),
 ]

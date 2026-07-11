@@ -1,4 +1,4 @@
-import type { PlaceDto, Sentiment } from './apiTypes'
+import type { PlaceDto, Sentiment, Visibility } from './apiTypes'
 
 export interface MockUser {
   id: string
@@ -11,6 +11,8 @@ export interface MockUser {
   followersCount: number
   followingCount: number
   trustSignal: string | null
+  defaultVisibility: Visibility
+  notificationsEnabled: boolean
 }
 
 export interface MockFollow {
@@ -19,12 +21,36 @@ export interface MockFollow {
   isCloseFriend: boolean
 }
 
-export type MockPlace = Omit<PlaceDto, 'myFeedback'> & { ownerId: string }
+export type MockPlace = Omit<PlaceDto, 'myFeedback' | 'isOwner'> & { ownerId: string }
 
 export interface MockFeedback {
   userId: string
   placeId: string
   sentiment: Sentiment
+}
+
+export interface MockCollection {
+  id: string
+  ownerId: string
+  name: string
+  description: string | null
+  visibility: Visibility
+  createdAt: string
+}
+
+export interface MockCollectionPlace {
+  collectionId: string
+  placeId: string
+  addedAt: string
+}
+
+export interface MockPlaceComment {
+  id: string
+  placeId: string
+  authorId: string
+  rating: number
+  text: string
+  createdAt: string
 }
 
 /**
@@ -51,6 +77,8 @@ export const mockDb = {
       followersCount: 12,
       followingCount: 3,
       trustSignal: null,
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
     },
     {
       id: 'user-2',
@@ -63,6 +91,8 @@ export const mockDb = {
       followersCount: 89,
       followingCount: 42,
       trustSignal: 'У вас похожий вкус в кофейнях',
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
     },
     {
       id: 'user-3',
@@ -75,6 +105,8 @@ export const mockDb = {
       followersCount: 156,
       followingCount: 61,
       trustSignal: 'Вы одинаково оцениваете рестораны',
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
     },
     {
       id: 'user-4',
@@ -87,6 +119,8 @@ export const mockDb = {
       followersCount: 34,
       followingCount: 28,
       trustSignal: 'Вы часто сохраняете похожие места',
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
     },
     {
       id: 'user-5',
@@ -99,6 +133,8 @@ export const mockDb = {
       followersCount: 210,
       followingCount: 95,
       trustSignal: 'Похожие места в подборках',
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
     },
     {
       id: 'user-6',
@@ -111,6 +147,8 @@ export const mockDb = {
       followersCount: 47,
       followingCount: 19,
       trustSignal: 'Совпадает вкус в ресторанах',
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
     },
   ] as MockUser[],
 
@@ -232,6 +270,60 @@ export const mockDb = {
       createdAt: '2026-06-25T19:00:00.000Z',
     },
   ] as MockPlace[],
+
+  collections: [
+    {
+      id: 'collection-1',
+      ownerId: 'user-1',
+      name: 'Уютные кофейни',
+      description: 'Места, куда хочется вернуться с книгой',
+      visibility: 'public',
+      createdAt: '2026-06-29T08:00:00.000Z',
+    },
+    {
+      id: 'collection-2',
+      ownerId: 'user-1',
+      name: 'Хочу успеть',
+      description: null,
+      visibility: 'private',
+      createdAt: '2026-07-06T12:00:00.000Z',
+    },
+    {
+      id: 'collection-3',
+      ownerId: 'user-2',
+      name: 'Обзорные точки',
+      description: 'Лучшие виды на город',
+      visibility: 'public',
+      createdAt: '2026-06-21T10:00:00.000Z',
+    },
+  ] as MockCollection[],
+
+  collectionPlaces: [
+    { collectionId: 'collection-1', placeId: 'place-1', addedAt: '2026-06-29T08:05:00.000Z' },
+    { collectionId: 'collection-2', placeId: 'place-3', addedAt: '2026-07-06T12:05:00.000Z' },
+    { collectionId: 'collection-2', placeId: 'place-5', addedAt: '2026-07-08T09:20:00.000Z' },
+    { collectionId: 'collection-3', placeId: 'place-6', addedAt: '2026-06-21T10:05:00.000Z' },
+    { collectionId: 'collection-3', placeId: 'place-7', addedAt: '2026-06-25T19:05:00.000Z' },
+  ] as MockCollectionPlace[],
+
+  comments: [
+    {
+      id: 'comment-1',
+      placeId: 'place-1',
+      authorId: 'user-2',
+      rating: 5,
+      text: 'Были здесь вместе — согласен, лучший флэт уайт в городе.',
+      createdAt: '2026-06-30T11:00:00.000Z',
+    },
+    {
+      id: 'comment-2',
+      placeId: 'place-1',
+      authorId: 'user-3',
+      rating: 4,
+      text: 'Уютно, но по выходным сложно найти столик.',
+      createdAt: '2026-07-02T15:30:00.000Z',
+    },
+  ] as MockPlaceComment[],
 }
 
 let idCounter = 1000

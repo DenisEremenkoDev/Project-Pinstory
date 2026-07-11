@@ -1,4 +1,5 @@
 import { MOOD_EMOJI, MOOD_LABELS, type PlaceDto } from '../lib/apiTypes'
+import { gradientForId } from '../lib/gradientPalette'
 import styles from './UnifiedPlaceCard.module.css'
 
 interface UnifiedPlaceCardProps {
@@ -18,7 +19,10 @@ export function UnifiedPlaceCard({ place, onOpen, onOpenOnMap }: UnifiedPlaceCar
       role="button"
       tabIndex={0}
     >
-      <div className={styles.photo}>
+      <div
+        className={styles.photo}
+        style={place.photoUrl ? undefined : { background: gradientForId(place.id) }}
+      >
         {place.photoUrl ? (
           <img src={place.photoUrl} alt={place.name} className={styles.photoImg} />
         ) : (

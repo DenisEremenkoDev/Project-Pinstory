@@ -1,5 +1,5 @@
 import { api } from '../../app/api'
-import type { PlaceDto, Sentiment } from '../../shared/lib/apiTypes'
+import type { PlaceCommentDto, PlaceDto, Sentiment } from '../../shared/lib/apiTypes'
 
 interface PlaceDetailDto extends PlaceDto {
   commentsCount: number
@@ -7,7 +7,7 @@ interface PlaceDetailDto extends PlaceDto {
   dislikesCount: number
 }
 
-type CreatePlaceRequest = Omit<PlaceDto, 'id' | 'createdAt' | 'myFeedback' | 'photoUrl'>
+type CreatePlaceRequest = Omit<PlaceDto, 'id' | 'createdAt' | 'myFeedback' | 'photoUrl' | 'isOwner'>
 type UpdatePlaceRequest = Partial<CreatePlaceRequest> & { id: string }
 
 interface FeedbackResponse {
@@ -72,6 +72,37 @@ export const placesApi = api.injectEndpoints({
         { type: 'Place', id: 'LIST' },
       ],
     }),
+
+    getPlaceComments: builder.query<PlaceCommentDto[], string>({
+      query: (placeId) => `/places/${placeId}/comments`,
+      transformResponse: (response: { comments: PlaceCommentDto[] }) => response.comments,
+      providesTags: (_result, _error, placeId) => [{ type: 'Place', id: `${placeId}-comments` }],
+    }),
+
+    createComment: builder.mutation<PlaceCommentDto, { placeId: string; rating: number; text: string }>({
+      query: ({ placeId, ...body }) => ({ url: `/places/${placeId}/comments`, method: 'POST', body }),
+      invalidatesTags: (_result, _error, { placeId }) => [
+        { type: 'Place', id: `${placeId}-comments` },
+        { type: 'Place', id: placeId },
+      ],
+    }),
+
+    updateComment: builder.mutation<PlaceCommentDto, { placeId: string; commentId: string; rating: number; text: string }>({
+      query: ({ placeId, commentId, ...body }) => ({
+        url: `/places/${placeId}/comments/${commentId}`,
+        method: 'PATCH',
+        body,
+      }),
+      invalidatesTags: (_result, _error, { placeId }) => [{ type: 'Place', id: `${placeId}-comments` }],
+    }),
+
+    deleteComment: builder.mutation<void, { placeId: string; commentId: string }>({
+      query: ({ placeId, commentId }) => ({ url: `/places/${placeId}/comments/${commentId}`, method: 'DELETE' }),
+      invalidatesTags: (_result, _error, { placeId }) => [
+        { type: 'Place', id: `${placeId}-comments` },
+        { type: 'Place', id: placeId },
+      ],
+    }),
   }),
 })
 
@@ -83,4 +114,8 @@ export const {
   useDeletePlaceMutation,
   useSetFeedbackMutation,
   useClearFeedbackMutation,
+  useGetPlaceCommentsQuery,
+  useCreateCommentMutation,
+  useUpdateCommentMutation,
+  useDeleteCommentMutation,
 } = placesApi

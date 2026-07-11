@@ -1,0 +1,48 @@
+.title {
+  display: block;
+  font: var(--text-title3);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.sectionLabel {
+  display: block;
+  font: var(--text-micro);
+  text-transform: uppercase;
+  color: var(--color-text-tertiary);
+  margin: var(--space-4) 0 var(--space-2);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-sunken);
+}
+
+.rowName {
+  font: var(--text-body);
+  color: var(--color-text-primary);
+}
+
+.rowAction {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-raised);
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+}

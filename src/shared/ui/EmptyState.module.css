@@ -5,12 +5,12 @@
   gap: var(--space-2);
   padding: var(--space-8) var(--space-4);
   text-align: center;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
 }
 
 .empty :global(.material-symbols-rounded) {
   font-size: 40px;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
 }
 
 .title {

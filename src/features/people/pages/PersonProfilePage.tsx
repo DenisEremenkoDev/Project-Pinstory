@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Avatar } from '../../../shared/ui/Avatar'
-import { ComingSoon } from '../../../shared/ui/ComingSoon'
 import { EmptyState } from '../../../shared/ui/EmptyState'
 import { Loader } from '../../../shared/ui/Loader'
 import { UnifiedPlaceCard } from '../../../shared/ui/UnifiedPlaceCard'
@@ -19,7 +18,6 @@ export function PersonProfilePage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [openPlaceId, setOpenPlaceId] = useState<string | null>(null)
-  const [isCompareTeaserOpen, setCompareTeaserOpen] = useState(false)
 
   const { data: person, isLoading } = useGetPersonQuery(id!)
   const { data: places, isLoading: placesLoading } = useGetPersonPlacesQuery(id!)
@@ -78,14 +76,6 @@ export function PersonProfilePage() {
             </button>
           )}
         </div>
-
-        <button
-          type="button"
-          className={styles.compareButton}
-          onClick={() => setCompareTeaserOpen(true)}
-        >
-          Сравнить карты
-        </button>
       </div>
 
       <div className={styles.placesSection}>
@@ -104,15 +94,6 @@ export function PersonProfilePage() {
 
       {openPlaceId && (
         <PlaceDetailView placeId={openPlaceId} onClose={() => setOpenPlaceId(null)} />
-      )}
-
-      {isCompareTeaserOpen && (
-        <ComingSoon
-          icon="compare"
-          title="Сравнение карт"
-          description="Скоро можно будет сравнить свою карту с картой друга и увидеть общие места. Мы дадим знать, когда это заработает."
-          onClose={() => setCompareTeaserOpen(false)}
-        />
       )}
     </div>
   )

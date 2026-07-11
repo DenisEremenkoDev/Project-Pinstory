@@ -1,0 +1,141 @@
+.settingsButton {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-6) var(--space-4) var(--space-4);
+}
+
+.name {
+  font: var(--text-title1);
+  color: var(--color-text-primary);
+}
+
+.status {
+  font: var(--text-caption);
+  color: var(--color-primary);
+}
+
+.bio {
+  font: var(--text-body);
+  color: var(--color-text-tertiary);
+  text-align: center;
+}
+
+.stats {
+  display: flex;
+  gap: var(--space-6);
+  margin: var(--space-3) 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.statValue {
+  font: var(--text-title2);
+  color: var(--color-text-primary);
+}
+
+.statLabel {
+  font: var(--text-caption);
+  color: var(--color-text-secondary);
+}
+
+.section {
+  padding: 0 var(--space-4) var(--space-4);
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-3);
+}
+
+.sectionTitle {
+  font: var(--text-title3);
+  color: var(--color-text-primary);
+}
+
+.sectionLink {
+  font: var(--text-caption);
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+.collectionsRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--space-3);
+}
+
+.collectionCard {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.collectionCard :global(.material-symbols-rounded) {
+  color: var(--color-primary);
+}
+
+.collectionName {
+  font: var(--text-caption);
+}
+
+.collectionCount {
+  font: var(--text-micro);
+  color: var(--color-text-tertiary);
+}
+
+.emptyCollections {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-tertiary);
+  text-decoration: none;
+  font: var(--text-caption);
+}
+
+.routesTeaser {
+  display: block;
+  width: calc(100% - var(--space-8));
+  margin: 0 var(--space-4) var(--space-6);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3);
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  font: var(--text-caption);
+  text-align: center;
+}

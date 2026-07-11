@@ -26,7 +26,7 @@ export const MOOD_EMOJI: Record<Mood, string> = {
 export const MOOD_LABELS: Record<Mood, string> = {
   calm: 'Спокойствие',
   serenity: 'Умиротворение',
-  hope: 'Надежда',
+  hope: 'Трогательно',
   laughter: 'Смех',
 }
 
@@ -44,10 +44,64 @@ export interface PlaceDto {
   mood: Mood | null
   createdAt: string
   myFeedback: Sentiment | null
+  isOwner: boolean
 }
 
 export interface UserSummaryDto {
   id: string
   displayName: string
   avatarUrl: string | null
+}
+
+export interface CollectionSummaryDto {
+  id: string
+  name: string
+  description: string | null
+  placesCount: number
+}
+
+export interface OwnCollectionDto extends CollectionSummaryDto {
+  visibility: Visibility
+  createdAt: string
+  places: PlaceDto[]
+}
+
+export interface FollowedCollectionDto extends CollectionSummaryDto {
+  owner: UserSummaryDto
+}
+
+export interface PlaceCommentDto {
+  id: string
+  authorId: string
+  authorName: string
+  authorAvatarUrl: string | null
+  rating: number
+  text: string
+  createdAt: string
+  isAuthor: boolean
+}
+
+export type FeedItemType = 'place_added' | 'wants_to_visit' | 'story_added'
+
+export interface FeedItemDto {
+  type: FeedItemType
+  place: PlaceDto
+  author: UserSummaryDto
+  createdAt: string
+}
+
+export interface ProfileDto {
+  user: {
+    id: string
+    email: string
+    displayName: string
+    avatarUrl: string | null
+    bio: string | null
+    status: string | null
+    defaultVisibility: Visibility
+    notificationsEnabled: boolean
+  }
+  placesCount: number
+  followersCount: number
+  followingCount: number
 }

@@ -1,5 +1,5 @@
 import { api } from '../../app/api'
-import type { PlaceDto } from '../../shared/lib/apiTypes'
+import type { CollectionSummaryDto, PlaceDto } from '../../shared/lib/apiTypes'
 
 interface PersonSearchResult {
   id: string
@@ -20,13 +20,6 @@ interface PersonDetail {
   isFollowing: boolean
   isCloseFriend: boolean
   trustSignal: string | null
-}
-
-interface PersonCollectionSummary {
-  id: string
-  name: string
-  description: string | null
-  placesCount: number
 }
 
 export const peopleApi = api.injectEndpoints({
@@ -70,9 +63,10 @@ export const peopleApi = api.injectEndpoints({
       providesTags: (_result, _error, id) => [{ type: 'Person', id: `${id}-places` }],
     }),
 
-    getPersonCollections: builder.query<PersonCollectionSummary[], string>({
+    getPersonCollections: builder.query<CollectionSummaryDto[], string>({
       query: (id) => `/people/${id}/collections`,
-      transformResponse: (response: { collections: PersonCollectionSummary[] }) => response.collections,
+      transformResponse: (response: { collections: CollectionSummaryDto[] }) => response.collections,
+      providesTags: (_result, _error, id) => [{ type: 'Person', id: `${id}-collections` }],
     }),
   }),
 })

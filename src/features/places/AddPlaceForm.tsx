@@ -25,9 +25,10 @@ const STATUS_OPTIONS = Object.entries(PLACE_STATUS_LABELS) as [AddPlaceFormValue
 
 interface AddPlaceFormProps {
   onSaved: () => void
+  coords?: { latitude: number; longitude: number }
 }
 
-export function AddPlaceForm({ onSaved }: AddPlaceFormProps) {
+export function AddPlaceForm({ onSaved, coords }: AddPlaceFormProps) {
   const [createPlace, { isLoading }] = useCreatePlaceMutation()
 
   const {
@@ -44,7 +45,7 @@ export function AddPlaceForm({ onSaved }: AddPlaceFormProps) {
   async function onSubmit(values: AddPlaceFormValues) {
     try {
       await createPlace({
-        ...DEFAULT_COORDS,
+        ...(coords ?? DEFAULT_COORDS),
         name: values.name,
         rating: values.rating,
         note: values.note?.trim() || null,
@@ -75,10 +76,10 @@ export function AddPlaceForm({ onSaved }: AddPlaceFormProps) {
         <span>Добавить фото</span>
       </div>
 
-      <button type="button" className={styles.locationField}>
+      <div className={styles.locationField}>
         <span className="material-symbols-rounded">location_on</span>
-        Где это было?
-      </button>
+        {coords ? 'Место выбрано на карте' : 'Где это было?'}
+      </div>
 
       <TextField
         label="Название места"
@@ -141,9 +142,11 @@ export function AddPlaceForm({ onSaved }: AddPlaceFormProps) {
         )}
       />
 
-      <Typography className={styles.mapNote}>
-        📍 Выбор точки на карте появится позже — пока сохраняем в центре города.
-      </Typography>
+      {!coords && (
+        <Typography className={styles.mapNote}>
+          📍 Открыто не с карты — сохраним в центре города, выберите точку на карте, чтобы указать точнее.
+        </Typography>
+      )}
 
       {errors.root && <Typography color="error">{errors.root.message}</Typography>}
 

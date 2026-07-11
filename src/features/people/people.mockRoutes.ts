@@ -98,10 +98,22 @@ export const peopleMockRoutes: MockRoute[] = [
         myFeedback:
           mockDb.feedback.find((f) => f.placeId === place.id && f.userId === currentUserId)
             ?.sentiment ?? null,
+        isOwner: place.ownerId === currentUserId,
       }))
 
     return { data: { places } }
   }),
 
-  defineMockRoute('GET', '/people/:id/collections', () => ({ data: { collections: [] } })),
+  defineMockRoute('GET', '/people/:id/collections', ({ pathParams }) => {
+    const collections = mockDb.collections
+      .filter((collection) => collection.ownerId === pathParams.id && collection.visibility === 'public')
+      .map((collection) => ({
+        id: collection.id,
+        name: collection.name,
+        description: collection.description,
+        placesCount: mockDb.collectionPlaces.filter((cp) => cp.collectionId === collection.id).length,
+      }))
+
+    return { data: { collections } }
+  }),
 ]

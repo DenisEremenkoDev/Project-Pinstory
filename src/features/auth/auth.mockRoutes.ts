@@ -36,6 +36,8 @@ export const authMockRoutes: MockRoute[] = [
       followersCount: 0,
       followingCount: 0,
       trustSignal: null,
+      defaultVisibility: 'public' as const,
+      notificationsEnabled: true,
     }
     mockDb.users.push(user)
 

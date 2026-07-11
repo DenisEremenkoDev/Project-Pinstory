@@ -20,7 +20,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   overflow: hidden;
 }
 
@@ -84,7 +84,7 @@
 }
 
 .feedbackIcon.dislike {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
 }
 
 .body {

@@ -13,7 +13,7 @@
 
 .bio {
   font: var(--text-body);
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   text-align: center;
 }
 
@@ -81,7 +81,7 @@
   padding: var(--space-3) var(--space-4);
   cursor: pointer;
   background: var(--color-surface-raised);
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font: var(--text-caption);
 }
 
@@ -91,17 +91,6 @@
   background: var(--color-highlight-subtle);
 }
 
-.compareButton {
-  width: 100%;
-  border: 1px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-3);
-  margin-top: var(--space-3);
-  background: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font: var(--text-caption);
-}
 
 .placesSection {
   padding: 0 var(--space-4) var(--space-4);

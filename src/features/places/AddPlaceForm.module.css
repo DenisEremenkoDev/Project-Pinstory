@@ -12,7 +12,7 @@
   border: 2px dashed var(--color-border);
   border-radius: var(--radius-lg);
   background: var(--color-surface-sunken);
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   cursor: pointer;
 }
 
@@ -27,21 +27,22 @@
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   background: var(--color-surface-sunken);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  border: none;
-  text-align: left;
+  color: var(--color-text-primary);
   font: var(--text-body);
+}
+
+.locationField :global(.material-symbols-rounded) {
+  color: var(--color-primary);
 }
 
 .microLabel {
   font: var(--text-micro);
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   margin-bottom: calc(-1 * var(--space-1));
 }
 
 .mapNote {
-  color: var(--color-text-secondary);
+  color: var(--color-text-tertiary);
   font: var(--text-caption);
 }

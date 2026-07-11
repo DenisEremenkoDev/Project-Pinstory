@@ -3,6 +3,9 @@ import { createMockBaseQuery, type MockBaseQuery } from '../shared/lib/mockBaseQ
 import { authMockRoutes } from '../features/auth/auth.mockRoutes'
 import { placesMockRoutes } from '../features/places/places.mockRoutes'
 import { peopleMockRoutes } from '../features/people/people.mockRoutes'
+import { collectionsMockRoutes } from '../features/collections/collections.mockRoutes'
+import { profileMockRoutes } from '../features/profile/profile.mockRoutes'
+import { feedMockRoutes } from '../features/feed/feed.mockRoutes'
 import type { RootState } from './store'
 
 // Flip VITE_USE_MOCKS to "false" (and set VITE_API_URL) once the real
@@ -13,6 +16,9 @@ const mockBaseQuery: MockBaseQuery = createMockBaseQuery([
   ...authMockRoutes,
   ...placesMockRoutes,
   ...peopleMockRoutes,
+  ...collectionsMockRoutes,
+  ...profileMockRoutes,
+  ...feedMockRoutes,
 ])
 
 const realBaseQuery = fetchBaseQuery({
