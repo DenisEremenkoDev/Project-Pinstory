@@ -33,6 +33,9 @@ export const authMockRoutes: MockRoute[] = [
       avatarUrl: null,
       bio: null,
       status: null,
+      followersCount: 0,
+      followingCount: 0,
+      trustSignal: null,
     }
     mockDb.users.push(user)
 
