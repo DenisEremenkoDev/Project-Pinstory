@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EmptyState } from '../../shared/ui/EmptyState'
+import { ErrorState } from '../../shared/ui/ErrorState'
 import { Loader } from '../../shared/ui/Loader'
 import { UnifiedPlaceCard } from '../../shared/ui/UnifiedPlaceCard'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
@@ -28,7 +29,7 @@ interface PlacesChronicleProps {
 
 export function PlacesChronicle({ onOpenPlace }: PlacesChronicleProps) {
   const [filter, setFilter] = useState<ChronicleFilter>('all')
-  const { data: places, isLoading } = useGetPlacesQuery()
+  const { data: places, isLoading, isError, refetch } = useGetPlacesQuery()
 
   const filteredPlaces = (places ?? []).filter((place) => {
     if (filter === 'all') return true
@@ -54,6 +55,8 @@ export function PlacesChronicle({ onOpenPlace }: PlacesChronicleProps) {
 
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorState onRetry={refetch} />
       ) : filteredPlaces.length === 0 ? (
         <EmptyState icon="auto_stories" title="Пока пусто" description={EMPTY_MESSAGES[filter]} />
       ) : (

@@ -3,6 +3,7 @@ import type { MouseEvent } from 'react'
 import { ComingSoon } from '../../../shared/ui/ComingSoon'
 import { BottomSheet } from '../../../shared/ui/BottomSheet'
 import { Loader } from '../../../shared/ui/Loader'
+import { ErrorState } from '../../../shared/ui/ErrorState'
 import { projectFromPercent } from '../../../shared/lib/mapProjection'
 import { useGetPersonPlacesQuery } from '../../people/peopleApi'
 import { AddPlaceForm } from '../AddPlaceForm'
@@ -24,10 +25,11 @@ export function MapPage() {
   const [overlayFriendId, setOverlayFriendId] = useState<string | null>(null)
   const [overlayFilter, setOverlayFilter] = useState<OverlayFilter>('all')
 
-  const { data: places, isLoading } = useGetPlacesQuery()
+  const { data: places, isLoading, isError, refetch } = useGetPlacesQuery()
   const { data: friendPlaces } = useGetPersonPlacesQuery(overlayFriendId ?? '', { skip: !overlayFriendId })
 
-  if (isLoading || !places) return <Loader />
+  if (isLoading) return <Loader />
+  if (isError || !places) return <ErrorState onRetry={refetch} />
 
   const view = overlayFriendId
     ? computeOverlayView(overlayFilter, places, friendPlaces ?? [])

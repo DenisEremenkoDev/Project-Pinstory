@@ -64,3 +64,8 @@
   cursor: pointer;
   font: var(--text-caption);
 }
+
+.error {
+  font: var(--text-caption);
+  color: var(--color-danger);
+}

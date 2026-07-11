@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { Avatar } from '../../../shared/ui/Avatar'
 import { EmptyState } from '../../../shared/ui/EmptyState'
+import { ErrorState } from '../../../shared/ui/ErrorState'
 import { Loader } from '../../../shared/ui/Loader'
 import { UnifiedPlaceCard } from '../../../shared/ui/UnifiedPlaceCard'
 import { PlaceDetailView } from '../../places/PlaceDetailView'
@@ -19,13 +20,19 @@ export function PersonProfilePage() {
   const navigate = useNavigate()
   const [openPlaceId, setOpenPlaceId] = useState<string | null>(null)
 
-  const { data: person, isLoading } = useGetPersonQuery(id!)
-  const { data: places, isLoading: placesLoading } = useGetPersonPlacesQuery(id!)
+  const { data: person, isLoading, isError, refetch } = useGetPersonQuery(id!)
+  const {
+    data: places,
+    isLoading: placesLoading,
+    isError: placesError,
+    refetch: refetchPlaces,
+  } = useGetPersonPlacesQuery(id!)
   const [follow] = useFollowMutation()
   const [unfollow] = useUnfollowMutation()
   const [toggleCloseFriend] = useToggleCloseFriendMutation()
 
-  if (isLoading || !person) return <Loader />
+  if (isLoading) return <Loader />
+  if (isError || !person) return <ErrorState onRetry={refetch} />
 
   return (
     <div>
@@ -81,6 +88,8 @@ export function PersonProfilePage() {
       <div className={styles.placesSection}>
         {placesLoading ? (
           <Loader />
+        ) : placesError ? (
+          <ErrorState onRetry={refetchPlaces} />
         ) : !places || places.length === 0 ? (
           <EmptyState icon="explore" title="Пока нет публичных мест" />
         ) : (

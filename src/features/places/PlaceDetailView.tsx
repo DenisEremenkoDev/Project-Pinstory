@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import { MOOD_EMOJI, MOOD_LABELS, PLACE_STATUS_LABELS, type PlaceStatus } from '../../shared/lib/apiTypes'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
 import { gradientForId } from '../../shared/lib/gradientPalette'
+import { ComingSoon } from '../../shared/ui/ComingSoon'
+import { ErrorState } from '../../shared/ui/ErrorState'
 import { Loader } from '../../shared/ui/Loader'
 import { PlaceComments } from './PlaceComments'
 import {
@@ -20,16 +23,30 @@ interface PlaceDetailViewProps {
 }
 
 export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
-  const { data: place, isLoading } = useGetPlaceQuery(placeId)
+  const [isRoutesTeaserOpen, setRoutesTeaserOpen] = useState(false)
+  const { data: place, isLoading, isError, refetch } = useGetPlaceQuery(placeId)
   const [setFeedback] = useSetFeedbackMutation()
   const [clearFeedback] = useClearFeedbackMutation()
   const [deletePlace] = useDeletePlaceMutation()
   const [updatePlace] = useUpdatePlaceMutation()
 
-  if (isLoading || !place) {
+  if (isLoading) {
     return (
       <div className={styles.overlay}>
         <Loader />
+      </div>
+    )
+  }
+
+  if (isError || !place) {
+    return (
+      <div className={styles.overlay}>
+        <div className={styles.topBar}>
+          <button type="button" className={styles.iconButton} onClick={onClose} aria-label="Назад">
+            <span className="material-symbols-rounded">arrow_back</span>
+          </button>
+        </div>
+        <ErrorState onRetry={refetch} />
       </div>
     )
   }
@@ -181,7 +198,21 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
             ))}
           </div>
         )}
+
+        <button type="button" className={styles.routesTeaser} onClick={() => setRoutesTeaserOpen(true)}>
+          <span>🚧</span>
+          Маршруты с этим местом — скоро
+        </button>
       </div>
+
+      {isRoutesTeaserOpen && (
+        <ComingSoon
+          icon="route"
+          title="Маршруты"
+          description="Скоро можно будет собирать маршруты из своих мест и проходить их вместе с друзьями. Мы дадим знать, когда это заработает."
+          onClose={() => setRoutesTeaserOpen(false)}
+        />
+      )}
     </div>
   )
 }

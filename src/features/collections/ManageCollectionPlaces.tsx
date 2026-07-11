@@ -1,4 +1,5 @@
 import { EmptyState } from '../../shared/ui/EmptyState'
+import { ErrorState } from '../../shared/ui/ErrorState'
 import { Loader } from '../../shared/ui/Loader'
 import type { OwnCollectionDto } from '../../shared/lib/apiTypes'
 import { useGetPlacesQuery } from '../places/placesApi'
@@ -10,7 +11,7 @@ interface ManageCollectionPlacesProps {
 }
 
 export function ManageCollectionPlaces({ collection }: ManageCollectionPlacesProps) {
-  const { data: ownPlaces, isLoading } = useGetPlacesQuery()
+  const { data: ownPlaces, isLoading, isError, refetch } = useGetPlacesQuery()
   const [addPlace, { isLoading: isAdding }] = useAddPlaceToCollectionMutation()
   const [removePlace, { isLoading: isRemoving }] = useRemovePlaceFromCollectionMutation()
 
@@ -46,6 +47,8 @@ export function ManageCollectionPlaces({ collection }: ManageCollectionPlacesPro
       <span className={styles.sectionLabel}>Добавить место</span>
       {isLoading ? (
         <Loader />
+      ) : isError ? (
+        <ErrorState onRetry={refetch} />
       ) : availablePlaces.length === 0 ? (
         <EmptyState icon="explore" title="Все ваши места уже здесь" />
       ) : (

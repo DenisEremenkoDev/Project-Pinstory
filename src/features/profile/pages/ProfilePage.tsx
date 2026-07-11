@@ -3,6 +3,7 @@ import { Link } from 'react-router'
 import { Avatar } from '../../../shared/ui/Avatar'
 import { BottomSheet } from '../../../shared/ui/BottomSheet'
 import { ComingSoon } from '../../../shared/ui/ComingSoon'
+import { ErrorState } from '../../../shared/ui/ErrorState'
 import { Loader } from '../../../shared/ui/Loader'
 import { useGetCollectionsQuery } from '../../collections/collectionsApi'
 import { useGetProfileQuery } from '../profileApi'
@@ -13,10 +14,11 @@ export function ProfilePage() {
   const [isSettingsOpen, setSettingsOpen] = useState(false)
   const [isRoutesTeaserOpen, setRoutesTeaserOpen] = useState(false)
 
-  const { data: profile, isLoading } = useGetProfileQuery()
+  const { data: profile, isLoading, isError, refetch } = useGetProfileQuery()
   const { data: collections } = useGetCollectionsQuery()
 
-  if (isLoading || !profile) return <Loader />
+  if (isLoading) return <Loader />
+  if (isError || !profile) return <ErrorState onRetry={refetch} />
 
   const { user } = profile
   const previewCollections = (collections?.own ?? []).slice(0, 3)

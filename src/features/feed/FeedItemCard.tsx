@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Avatar } from '../../shared/ui/Avatar'
 import { UnifiedPlaceCard } from '../../shared/ui/UnifiedPlaceCard'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
+import { getApiErrorMessage } from '../../shared/lib/getApiErrorMessage'
 import type { FeedItemDto, FeedItemType } from '../../shared/lib/apiTypes'
 import { useCreatePlaceMutation } from '../places/placesApi'
 import styles from './FeedItemCard.module.css'
@@ -20,20 +21,26 @@ interface FeedItemCardProps {
 export function FeedItemCard({ item, onOpenPlace }: FeedItemCardProps) {
   const [createPlace, { isLoading }] = useCreatePlaceMutation()
   const [isAdded, setAdded] = useState(false)
+  const [error, setErrorMessage] = useState<string | null>(null)
 
   async function handleAddToMine() {
-    await createPlace({
-      name: item.place.name,
-      latitude: item.place.latitude,
-      longitude: item.place.longitude,
-      rating: item.place.rating,
-      note: null,
-      tags: item.place.tags,
-      status: 'want_to_visit',
-      visibility: 'public',
-      mood: null,
-    }).unwrap()
-    setAdded(true)
+    setErrorMessage(null)
+    try {
+      await createPlace({
+        name: item.place.name,
+        latitude: item.place.latitude,
+        longitude: item.place.longitude,
+        rating: item.place.rating,
+        note: null,
+        tags: item.place.tags,
+        status: 'want_to_visit',
+        visibility: 'public',
+        mood: null,
+      }).unwrap()
+      setAdded(true)
+    } catch (err) {
+      setErrorMessage(getApiErrorMessage(err, 'Не удалось добавить место'))
+    }
   }
 
   return (
@@ -63,6 +70,8 @@ export function FeedItemCard({ item, onOpenPlace }: FeedItemCardProps) {
           Посмотреть
         </button>
       </div>
+
+      {error && <span className={styles.error}>{error}</span>}
     </div>
   )
 }

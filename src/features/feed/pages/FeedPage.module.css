@@ -58,3 +58,29 @@
   opacity: 0.6;
   cursor: default;
 }
+
+.loadMoreError {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-4) var(--space-4) var(--space-6);
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  text-align: center;
+}
+
+.loadMoreError span {
+  font: var(--text-caption);
+  color: var(--color-danger);
+}
+
+.loadMoreError button {
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  cursor: pointer;
+  font: var(--text-caption);
+  font-weight: 700;
+}

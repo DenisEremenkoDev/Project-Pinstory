@@ -4,17 +4,22 @@ import { TextField } from '@mui/material'
 import { Avatar } from '../../../shared/ui/Avatar'
 import { Loader } from '../../../shared/ui/Loader'
 import { EmptyState } from '../../../shared/ui/EmptyState'
+import { ErrorState } from '../../../shared/ui/ErrorState'
 import { useFollowMutation, useSearchPeopleQuery } from '../peopleApi'
 import styles from './PeopleListPage.module.css'
 
 export function PeopleListPage() {
   const [query, setQuery] = useState('')
   const navigate = useNavigate()
-  const { data: people, isLoading } = useSearchPeopleQuery(query)
+  const { data: people, isLoading, isError, refetch } = useSearchPeopleQuery(query)
   const [follow] = useFollowMutation()
 
-  if (isLoading || !people) {
+  if (isLoading) {
     return <Loader />
+  }
+
+  if (isError || !people) {
+    return <ErrorState onRetry={refetch} />
   }
 
   if (query.trim()) {
