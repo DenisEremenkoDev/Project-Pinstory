@@ -11,7 +11,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy": "git push origin HEAD:main"
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
