@@ -1,0 +1,55 @@
+.map {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.stateOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Pin visuals mirror MapPins.module.css exactly so the real map and the
+   placeholder look identical; only the positioning differs — here ymaps3
+   anchors the element at the geo point, and the same translate(-50%, -100%)
+   moves the teardrop tip onto that point. */
+.pin {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 50% 50% 50% 5px;
+  background: var(--color-primary);
+  transform: translate(-50%, -100%) rotate(45deg);
+  box-shadow: var(--shadow-md);
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.pinSelected {
+  box-shadow: 0 0 0 7px var(--color-primary-subtle), var(--shadow-md);
+}
+
+.friendPin {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border-radius: 50% 50% 50% 4px;
+  transform: translate(-50%, -100%) rotate(45deg);
+  box-shadow: var(--shadow-md);
+  border: 2px solid var(--color-surface-raised);
+  padding: 0;
+  cursor: pointer;
+}
+
+.friendPinShared {
+  background: var(--color-highlight);
+}
+
+.friendPinOnly {
+  background: var(--color-accent);
+}

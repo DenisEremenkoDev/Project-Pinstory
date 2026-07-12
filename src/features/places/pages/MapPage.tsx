@@ -5,6 +5,7 @@ import { BottomSheet } from '../../../shared/ui/BottomSheet'
 import { Loader } from '../../../shared/ui/Loader'
 import { ErrorState } from '../../../shared/ui/ErrorState'
 import { projectFromPercent } from '../../../shared/lib/mapProjection'
+import { hasRealMapsKey } from '../../../shared/lib/mapsConfig'
 import { useGetPersonPlacesQuery } from '../../people/peopleApi'
 import { AddPlaceForm } from '../AddPlaceForm'
 import { PlaceDetailView } from '../PlaceDetailView'
@@ -12,6 +13,7 @@ import { MapSearchSheet } from '../MapSearchSheet'
 import { MapFriendPicker } from '../MapFriendPicker'
 import { MapFriendOverlay } from '../MapFriendOverlay'
 import { MapPins, type MapLayer } from '../MapPins'
+import { YandexMap } from '../YandexMap'
 import { computeOverlayView, type OverlayFilter } from '../mapOverlayFilter'
 import { useGetPlacesQuery } from '../placesApi'
 import styles from './MapPage.module.css'
@@ -46,6 +48,8 @@ export function MapPage() {
     },
   ]
 
+  // Placeholder-mode only: with the real map, clicks come from YandexMap's
+  // ymaps3 listener with genuine geo coordinates instead of this projection.
   function handleMapClick(event: MouseEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect()
     const leftPercent = ((event.clientX - rect.left) / rect.width) * 100
@@ -54,11 +58,22 @@ export function MapPage() {
   }
 
   return (
-    <div className={styles.page} onClick={handleMapClick}>
-      <div className={styles.basemap} />
-      <div className={styles.gridLineH} style={{ top: '35%' }} />
-      <div className={styles.gridLineV} style={{ left: '45%' }} />
-      <div className={styles.gridLineH} style={{ top: '58%' }} />
+    <div className={styles.page} onClick={hasRealMapsKey ? undefined : handleMapClick}>
+      {hasRealMapsKey ? (
+        <YandexMap
+          layers={layers}
+          selectedPlaceId={openPlaceId}
+          onPinTap={(place) => setOpenPlaceId(place.id)}
+          onMapClick={setPendingCoords}
+        />
+      ) : (
+        <>
+          <div className={styles.basemap} />
+          <div className={styles.gridLineH} style={{ top: '35%' }} />
+          <div className={styles.gridLineV} style={{ left: '45%' }} />
+          <div className={styles.gridLineH} style={{ top: '58%' }} />
+        </>
+      )}
 
       <div className={styles.header}>
         <div className={styles.headerTop}>
@@ -99,7 +114,9 @@ export function MapPage() {
         </button>
       </div>
 
-      <MapPins layers={layers} selectedPlaceId={openPlaceId} onPinTap={(place) => setOpenPlaceId(place.id)} />
+      {!hasRealMapsKey && (
+        <MapPins layers={layers} selectedPlaceId={openPlaceId} onPinTap={(place) => setOpenPlaceId(place.id)} />
+      )}
 
       {overlayFriendId && (
         <MapFriendOverlay
