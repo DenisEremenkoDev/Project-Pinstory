@@ -6,10 +6,18 @@ import tseslint from 'typescript-eslint'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import eslintConfigPrettier from 'eslint-config-prettier'
 
+const noUnusedVarsRule = {
+  '@typescript-eslint/no-unused-vars': [
+    'error',
+    { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+  ],
+}
+
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'backend/dist', 'backend/node_modules']),
+  // Frontend (src/) — browser globals + React rules
   {
-    files: ['**/*.{ts,tsx}'],
+    files: ['src/**/*.{ts,tsx}'],
     extends: [
       js.configs.recommended,
       tseslint.configs.recommended,
@@ -20,5 +28,15 @@ export default defineConfig([
     languageOptions: {
       globals: globals.browser,
     },
+    rules: noUnusedVarsRule,
+  },
+  // Backend (backend/src/) — Node globals, no React rules
+  {
+    files: ['backend/src/**/*.ts'],
+    extends: [js.configs.recommended, tseslint.configs.recommended, eslintConfigPrettier],
+    languageOptions: {
+      globals: globals.node,
+    },
+    rules: noUnusedVarsRule,
   },
 ])

@@ -1,0 +1,136 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums -------------------------------------------------------------------
+
+enum PlaceStatus {
+  want_to_visit
+  planned
+  favorite
+}
+
+enum Visibility {
+  public
+  private
+}
+
+enum Sentiment {
+  like
+  dislike
+}
+
+// Mood is missing from BACKEND_INSTRUCTIONS.md §3 — source of truth is mockDb.ts
+enum Mood {
+  calm
+  serenity
+  hope
+  laughter
+}
+
+// --- Models ------------------------------------------------------------------
+
+model User {
+  id                   String     @id @default(uuid())
+  email                String     @unique
+  passwordHash         String
+  displayName          String
+  avatarUrl            String?
+  bio                  String?
+  status               String?
+  defaultVisibility    Visibility @default(public)
+  notificationsEnabled Boolean    @default(true)
+  createdAt            DateTime   @default(now())
+
+  places       Place[]
+  feedback     PlaceFeedback[]
+  comments     PlaceComment[]
+  collections  Collection[]
+  following    Follow[]        @relation("Follower")
+  followers    Follow[]        @relation("Following")
+}
+
+model Follow {
+  id            String   @id @default(uuid())
+  followerId    String
+  follower      User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId   String
+  following     User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  isCloseFriend Boolean  @default(false)
+  createdAt     DateTime @default(now())
+
+  @@unique([followerId, followingId])
+}
+
+model Place {
+  id         String      @id @default(uuid())
+  ownerId    String
+  owner      User        @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name       String
+  latitude   Float
+  longitude  Float
+  rating     Int
+  note       String?
+  photoUrl   String?
+  tags       String[]
+  status     PlaceStatus
+  visibility Visibility
+  mood       Mood?
+  createdAt  DateTime    @default(now())
+
+  feedback    PlaceFeedback[]
+  comments    PlaceComment[]
+  collections CollectionPlace[]
+}
+
+model PlaceFeedback {
+  id        String    @id @default(uuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  placeId   String
+  place     Place     @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  sentiment Sentiment
+  createdAt DateTime  @default(now())
+
+  @@unique([userId, placeId])
+}
+
+// updatedAt present (missing from BACKEND_INSTRUCTIONS.md §3 — editable comments need it)
+model PlaceComment {
+  id        String   @id @default(uuid())
+  placeId   String
+  place     Place    @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  rating    Int
+  text      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Collection {
+  id          String     @id @default(uuid())
+  ownerId     String
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  visibility  Visibility
+  createdAt   DateTime   @default(now())
+
+  places CollectionPlace[]
+}
+
+model CollectionPlace {
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  placeId      String
+  place        Place      @relation(fields: [placeId], references: [id], onDelete: Cascade)
+  addedAt      DateTime   @default(now())
+
+  @@id([collectionId, placeId])
+}

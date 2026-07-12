@@ -76,10 +76,12 @@ export const placesMockRoutes: MockRoute[] = [
   }),
 
   defineMockRoute('GET', '/places/:id', ({ pathParams, currentUserId }) => {
+    // Public read: a missing place and a non-owner's private place BOTH return
+    // 404 so this surface is not an existence oracle (privacy.md rule #1;
+    // ratified 2026-07-12). PATCH/DELETE stay 403 — they require auth.
     const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
-    if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
-    if (place.visibility === 'private' && place.ownerId !== currentUserId) {
-      return mockError(403, 'Это место недоступно', 'PLACE_FORBIDDEN')
+    if (!place || (place.visibility === 'private' && place.ownerId !== currentUserId)) {
+      return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
     }
 
     return {

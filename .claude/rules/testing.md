@@ -19,7 +19,7 @@ Principle from `TESTING_PLAN.md`: **do not chase coverage.** Test where logic ca
 2. Login: wrong password → **401**; correct → token in the response
 3. Protected route without a token → **401**
 4. `GET /places` — another user's **private** place does not appear in the caller's list
-5. `GET /places/:id` — another user's private place → **403** (even by guessing the id)
+5. `GET /places/:id` — another user's private place → **404** (even by guessing the id). Collapses with "not found" so this public read is not an existence oracle (privacy.md rule #1; ratified 2026-07-12, supersedes the mock's old 403). `PATCH`/`DELETE` still → **403**.
 6. `PATCH` / `DELETE /places/:id` on someone else's place → **403**
 7. `POST /places` with out-of-range coordinates → **400**
 8. `POST /places` **without `rating`** → **400** (rating is mandatory at creation)
