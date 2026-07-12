@@ -12,22 +12,16 @@ dist
 dist-ssr
 *.local
 
-# Env
+# Env — secrets stay out
 .env
 .env.*.local
 
-# Internal planning/instruction docs — kept locally, not published
-.claude/
-CLAUDE.md
-FEATURES_SCOPE.md
-FRONTEND_INSTRUCTIONS.md
-BACKEND_INSTRUCTIONS.md
-TESTING_PLAN.md
-DEPLOYMENT.md
-README_TEMPLATE.md
-PINSTORY_PROJECT_SUMMARY_PROMPT.md
-PROJECT_AUDIT_AND_RECOMMENDATIONS.md
-design-reference/
+# Claude Code personal overrides (auto-created; never shared)
+.claude/settings.local.json
+
+# The compiled design bundle: 7.6 MB, ~5.6 MB of it base64 fonts.
+# The readable extract is committed at design-reference/Pinstory-source-readable.html.
+design-reference/Pinstory.html
 
 # Editor directories and files
 .vscode/*
@@ -39,3 +33,18 @@ design-reference/
 *.njsproj
 *.sln
 *.sw?
+
+# --- REMOVED from the previous .gitignore -----------------------------------
+# The AI Workspace is part of the project architecture and must evolve with the
+# codebase. These are now tracked:
+#   .claude/                      CLAUDE.md
+#   FEATURES_SCOPE.md             FRONTEND_INSTRUCTIONS.md
+#   BACKEND_INSTRUCTIONS.md       TESTING_PLAN.md
+#   DEPLOYMENT.md                 design-reference/
+#   ai-knowledge-base/            (was untracked entirely)
+# ----------------------------------------------------------------------------
+
+# Personal / temporary workspace artifacts
+PINSTORY_PROJECT_SUMMARY_PROMPT.md
+PROJECT_AUDIT_AND_RECOMMENDATIONS.md
+gitignore.patched
