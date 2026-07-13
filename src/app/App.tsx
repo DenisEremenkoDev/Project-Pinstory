@@ -1,11 +1,16 @@
 import { ThemeProvider } from '@mui/material/styles'
 import { BrowserRouter } from 'react-router'
 import { useTheme } from '../features/theme/useTheme'
+import { useSessionBootstrap } from '../features/auth/useSessionBootstrap'
+import { Loader } from '../shared/ui/Loader'
 import { AppRoutes } from './AppRoutes'
 import { muiTheme } from './muiTheme'
 
 function App() {
   useTheme()
+  const { isBootstrapping } = useSessionBootstrap()
+
+  if (isBootstrapping) return <Loader />
 
   return (
     <ThemeProvider theme={muiTheme}>

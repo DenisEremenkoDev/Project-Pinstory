@@ -43,6 +43,7 @@ type MapLayer = { source: 'own' | 'friend'; places: { place: PlaceDto; variant?:
 The real map is created **once**; latest-callback refs prevent re-init on parent re-render. Markers are torn down and rebuilt on `layers`/`selectedPlaceId` change — inefficient but correct. `destroy()` on unmount.
 Initial center: first own place, else Saint Petersburg `[30.35, 59.93]`, zoom 12.
 
-## Geocoding (not yet implemented)
-`YANDEX_GEOCODER_API_KEY` has **no `VITE_` prefix on purpose** — it must never be bundled client-side. Geosuggest/geocoding routes **through the backend** (D15).
-**Legal constraint:** geosuggest/geosearch are always live requests. **Never cache Yandex org-search results as a directory.** Persist only what the user explicitly saved.
+## Geocoding (implemented — Phase 3, 2026-07-13)
+`YANDEX_GEOCODER_API_KEY` has **no `VITE_` prefix on purpose** — it must never be bundled client-side. Geosuggest/geocoding routes **through the backend** (D15): `GET /geocode?query=` (`backend/src/services/geocodeService.ts`), consumed by `LocationSearchSheet.tsx` in the add-place form, debounced 300–500ms client-side.
+**Legal constraint:** geosuggest/geosearch are always live requests. **Never cache Yandex org-search results as a directory.** Persist only what the user explicitly saved. (The mock's static fake result list is fictional demo data, not real Yandex results — it doesn't violate this.)
+**Not built (deferred):** reverse geocoding on map-click-to-add (prefilling a suggested name from tapped coordinates).

@@ -12,8 +12,9 @@ interface LoginBody {
   password: string
 }
 
-// The mock has no real cookie storage, so refresh/logout are no-ops that
-// always succeed — there's nothing to verify without a backend session.
+// The mock has no real cookie storage. `logout` is a no-op that always
+// succeeds; `refresh` always fails — there is never a persisted session to
+// restore in mock mode, so a page reload legitimately logs the user out here.
 export const authMockRoutes: MockRoute[] = [
   defineMockRoute('POST', '/auth/register', ({ body }) => {
     const { email, password, displayName } = body as RegisterBody
@@ -64,6 +65,10 @@ export const authMockRoutes: MockRoute[] = [
       },
     }
   }),
+
+  defineMockRoute('POST', '/auth/refresh', () =>
+    mockError(401, 'Сессия истекла, войдите снова', 'UNAUTHORIZED'),
+  ),
 
   defineMockRoute('POST', '/auth/logout', () => ({ data: undefined })),
 ]

@@ -1,9 +1,20 @@
 import { defineMockRoute, mockError, type MockRoute } from '../../shared/lib/mockBaseQuery'
 import { mockDb, nextMockId, type MockPlace, type MockPlaceComment } from '../../shared/lib/mockDb'
-import type { Mood, PlaceStatus, Sentiment, Visibility } from '../../shared/lib/apiTypes'
+import type { GeocodeResultDto, Mood, PlaceStatus, Sentiment, Visibility } from '../../shared/lib/apiTypes'
 
 const STATUSES: PlaceStatus[] = ['want_to_visit', 'planned', 'favorite']
 const VISIBILITIES: Visibility[] = ['public', 'private']
+
+// Fictional demo data for mock mode — NOT real Yandex results, so caching them
+// here doesn't touch the "never cache org-search results" legal constraint
+// (map.md). The real backend proxies live Yandex Geocoder calls instead.
+const FAKE_GEOCODE_RESULTS: GeocodeResultDto[] = [
+  { name: 'Эрмитаж', address: 'Дворцовая пл., 2, Санкт-Петербург', latitude: 59.9398, longitude: 30.3146 },
+  { name: 'Исаакиевский собор', address: 'Исаакиевская пл., 4, Санкт-Петербург', latitude: 59.9343, longitude: 30.3061 },
+  { name: 'Петропавловская крепость', address: 'Заячий остров, Санкт-Петербург', latitude: 59.9498, longitude: 30.3161 },
+  { name: 'Летний сад', address: 'наб. Кутузова, Санкт-Петербург', latitude: 59.9436, longitude: 30.3367 },
+  { name: 'Кофейня «Циферблат»', address: 'ул. Рубинштейна, 5, Санкт-Петербург', latitude: 59.9295, longitude: 30.3459 },
+]
 
 interface CreatePlaceBody {
   name: string
@@ -60,6 +71,19 @@ function validateCreateBody(body: CreatePlaceBody): string | null {
 }
 
 export const placesMockRoutes: MockRoute[] = [
+  // Live geosuggest pass-through (Phase 3). No auth required — matches the
+  // pattern of other non-sensitive read-only lookups (ADR-07 spirit).
+  defineMockRoute('GET', '/geocode', ({ searchParams }) => {
+    const query = (searchParams.get('query') ?? '').trim().toLowerCase()
+    if (!query) return { data: { results: [] } }
+
+    const results = FAKE_GEOCODE_RESULTS.filter(
+      (result) =>
+        result.name.toLowerCase().includes(query) || result.address.toLowerCase().includes(query),
+    )
+    return { data: { results } }
+  }),
+
   defineMockRoute('GET', '/places', ({ currentUserId }) => {
     if (!currentUserId) return mockError(401, 'Не авторизован', 'UNAUTHORIZED')
 

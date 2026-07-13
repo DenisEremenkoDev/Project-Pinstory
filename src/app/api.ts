@@ -23,6 +23,9 @@ const mockBaseQuery: MockBaseQuery = createMockBaseQuery([
 
 const realBaseQuery = fetchBaseQuery({
   baseUrl: import.meta.env.VITE_API_URL,
+  // Sends the httpOnly refresh cookie cross-origin (frontend/backend are
+  // different ports in dev) — required for POST /auth/refresh to work.
+  credentials: 'include',
   prepareHeaders: (headers, { getState }) => {
     const accessToken = (getState() as RootState).auth.accessToken
     if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`)

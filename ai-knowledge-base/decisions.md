@@ -84,10 +84,14 @@ service layer" rule.
 `isSamePlace` matches by name or near-coordinates (`mapMatching.ts`). *Why:* each
 user owns independent `Place` rows; there is no shared place entity by design.
 
-**D15. Geosuggest/geocoding will proxy through the backend; key is non-`VITE_`.
-[Assumption / Confirmed intent]** `.env.example` `YANDEX_GEOCODER_API_KEY` has no
-`VITE_` prefix on purpose (must not be bundled client-side). Not yet implemented.
-Also a legal constraint: never cache Yandex org-search results as a directory.
+**D15. Geosuggest/geocoding proxies through the backend; key is non-`VITE_`.
+[Confirmed, implemented 2026-07-13]** `GET /geocode?query=` (`backend/src/services/
+geocodeService.ts`) calls the real Yandex Geocoder HTTP API server-side using
+`YANDEX_GEOCODER_API_KEY`, never bundled client-side. The mock returns a small
+static fictional result set (not real Yandex data, so caching it in-memory for
+demo purposes doesn't violate the legal constraint below). *Why:* never cache
+Yandex org-search results as a directory — only what the user explicitly saves
+becomes a `Place`.
 
 ---
 

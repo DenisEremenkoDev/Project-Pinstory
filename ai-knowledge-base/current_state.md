@@ -56,6 +56,11 @@
 - Basic friend map overlay: picker, second pin layer, legend, filter chips, overlay
   math (`mapOverlayFilter` + `mapMatching`).
 - In-app search over own places (`MapSearchSheet`).
+- **Live Yandex geosuggest** (Phase 3, done 2026-07-13): `LocationSearchSheet.tsx`
+  in `AddPlaceForm`, debounced address search against `GET /geocode` (real
+  backend proxies Yandex Geocoder; mock returns static fake results). Only
+  active when the add-place sheet wasn't opened via a map click. Reverse
+  geocoding on map-click-to-add was deliberately deferred, not built.
 
 **Coming Soon teasers** (implemented as required overlays)
 - Routes (profile + place detail), full Map Comparison, notifications.
@@ -90,8 +95,10 @@
   key is present; the placeholder remains the default path.
 - **People recommendations** are a simplified heuristic (seeded `trustSignal`
   strings), not a real similar-taste algorithm — by design for MVP.
-- **Photo upload** — the add-place form shows a photo dropzone but does not upload;
-  `photoUrl` is always `null` in the mock (`POST /places/:id/photo` is unimplemented).
+- **Photo upload** — the real backend's `POST /places/:id/photo` works (Phase 1
+  Step 5, `multer`); the frontend's add-place dropzone is still a decorative
+  `div` with no click handler or file input, and never calls it. `photoUrl`
+  stays `null` end-to-end until this is wired up.
 - **Tests** — only the feed is covered (`FeedItemCard.test.tsx`,
   `FeedPage.test.tsx`). `TESTING_PLAN.md` prioritizes auth/access/privacy/follows,
   which are **not yet tested**.

@@ -90,6 +90,16 @@ export interface FeedItemDto {
   createdAt: string
 }
 
+// Live Yandex Geocoder pass-through — never persisted, never cached as a
+// directory (map.md legal constraint). Only what the user explicitly saves
+// becomes a Place.
+export interface GeocodeResultDto {
+  name: string
+  address: string
+  latitude: number
+  longitude: number
+}
+
 export interface ProfileDto {
   user: {
     id: string

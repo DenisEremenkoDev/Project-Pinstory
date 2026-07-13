@@ -61,14 +61,20 @@ The frontend is done against mocks; the biggest gap is the absent backend
 
 ---
 
-## Phase 3 — Map completion [Confirmed direction]
+## Phase 3 — Map completion
 
-- **[Confirmed]** Live Yandex **geosuggest/geocoder** in the add-place form, routed
-  **through the backend** using `YANDEX_GEOCODER_API_KEY` (non-`VITE_`). Respect the
-  legal constraint: geosuggest/geosearch are always live requests; never cache org-
-  search results as a directory — persist only what the user explicitly saved.
+- **[Done, 2026-07-13]** Live Yandex **geosuggest/geocoder** in the add-place form,
+  routed **through the backend** (`GET /geocode?query=`) using `YANDEX_GEOCODER_API_KEY`
+  (non-`VITE_`). `LocationSearchSheet.tsx` (debounced 300-500ms) opens from
+  `AddPlaceForm`'s location chip when the form wasn't opened via a map click.
+  `GeocodeResultDto` is a live pass-through — no `mockDb` relation, no cache tags;
+  the legal constraint (never cache org-search results as a directory) holds.
+  Scope was deliberately narrowed to forward address search only — reverse
+  geocoding on map-click-to-add was explicitly deferred, not built.
 - **[Proposal]** Optional map polish: clustering for dense own-place sets, camera
   fit-to-bounds, smoother marker diffing (currently full teardown/rebuild).
+- **[Proposal, deferred from Phase 3]** Reverse-geocode on map-click-to-add (prefill
+  a suggested place name from tapped coordinates) — needs `GET /geocode/reverse`.
 
 ---
 

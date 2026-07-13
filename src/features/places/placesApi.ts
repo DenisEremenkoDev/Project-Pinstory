@@ -1,5 +1,5 @@
 import { api } from '../../app/api'
-import type { PlaceCommentDto, PlaceDto, Sentiment } from '../../shared/lib/apiTypes'
+import type { GeocodeResultDto, PlaceCommentDto, PlaceDto, Sentiment } from '../../shared/lib/apiTypes'
 
 interface PlaceDetailDto extends PlaceDto {
   commentsCount: number
@@ -18,6 +18,13 @@ interface FeedbackResponse {
 
 export const placesApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    // Live external pass-through (Phase 3 geosuggest) — no tags: nothing else
+    // invalidates or depends on it, it isn't cached domain state.
+    geocodeSearch: builder.query<GeocodeResultDto[], string>({
+      query: (queryText) => ({ url: '/geocode', params: { query: queryText } }),
+      transformResponse: (response: { results: GeocodeResultDto[] }) => response.results,
+    }),
+
     getPlaces: builder.query<PlaceDto[], void>({
       query: () => '/places',
       transformResponse: (response: { places: PlaceDto[] }) => response.places,
@@ -107,6 +114,7 @@ export const placesApi = api.injectEndpoints({
 })
 
 export const {
+  useGeocodeSearchQuery,
   useGetPlacesQuery,
   useGetPlaceQuery,
   useCreatePlaceMutation,

@@ -27,6 +27,10 @@ interface RegisterResponse {
   displayName: string
 }
 
+interface RefreshResponse {
+  accessToken: string
+}
+
 export const authApi = api.injectEndpoints({
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginRequest>({
@@ -35,10 +39,15 @@ export const authApi = api.injectEndpoints({
     register: builder.mutation<RegisterResponse, RegisterRequest>({
       query: (body) => ({ url: '/auth/register', method: 'POST', body }),
     }),
+    // Called once on app load to silently restore a session from the httpOnly
+    // refresh cookie. Always 401 in mock mode — there is no persisted cookie.
+    refresh: builder.mutation<RefreshResponse, void>({
+      query: () => ({ url: '/auth/refresh', method: 'POST' }),
+    }),
     logout: builder.mutation<void, void>({
       query: () => ({ url: '/auth/logout', method: 'POST' }),
     }),
   }),
 })
 
-export const { useLoginMutation, useRegisterMutation, useLogoutMutation } = authApi
+export const { useLoginMutation, useRegisterMutation, useRefreshMutation, useLogoutMutation } = authApi

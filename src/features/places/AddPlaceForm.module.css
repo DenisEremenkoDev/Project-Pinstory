@@ -24,11 +24,19 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
+  width: 100%;
   padding: var(--space-3) var(--space-4);
+  border: none;
   border-radius: var(--radius-md);
   background: var(--color-surface-sunken);
   color: var(--color-text-primary);
   font: var(--text-body);
+  text-align: left;
+  cursor: pointer;
+}
+
+.locationField:disabled {
+  cursor: default;
 }
 
 .locationField :global(.material-symbols-rounded) {

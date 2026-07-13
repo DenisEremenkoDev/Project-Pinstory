@@ -12,6 +12,7 @@ import peopleRoutes from './routes/peopleRoutes'
 import collectionRoutes from './routes/collectionRoutes'
 import feedRoutes from './routes/feedRoutes'
 import profileRoutes from './routes/profileRoutes'
+import geocodeRoutes from './routes/geocodeRoutes'
 
 export const logger = pino({
   level: process.env.LOG_LEVEL ?? 'info',
@@ -57,6 +58,7 @@ app.use('/people', peopleRoutes)
 app.use('/collections', collectionRoutes)
 app.use('/feed', feedRoutes)
 app.use('/profile', profileRoutes)
+app.use('/geocode', geocodeRoutes)
 
 // Global error handler — must be last
 app.use(errorHandler)
