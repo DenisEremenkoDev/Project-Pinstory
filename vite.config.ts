@@ -7,6 +7,12 @@ export default defineConfig({
   // GitHub Pages serves this repo from /Project-Pinstory/, not the domain root.
   // Other deploy targets (Vercel/Netlify) set GITHUB_PAGES=false and keep the root base.
   base: process.env.GITHUB_PAGES ? '/Project-Pinstory/' : '/',
+  // Force IPv4 loopback: on this machine "localhost" can resolve to ::1 only
+  // for Vite's default bind, while Chrome/curl resolve it to 127.0.0.1 —
+  // causing ERR_CONNECTION_REFUSED even though the dev server is "ready".
+  server: {
+    host: '127.0.0.1',
+  },
   plugins: [react()],
   test: {
     environment: 'jsdom',

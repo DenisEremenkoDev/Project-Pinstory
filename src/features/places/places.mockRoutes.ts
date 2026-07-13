@@ -165,6 +165,9 @@ export const placesMockRoutes: MockRoute[] = [
   }),
 
   defineMockRoute('DELETE', '/places/:id/feedback', ({ pathParams, currentUserId }) => {
+    // A mutation — requires a token (ADR-07 C1; previously missing this check).
+    if (!currentUserId) return mockError(401, 'Не авторизован', 'UNAUTHORIZED')
+
     const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
     if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
     if (place.visibility === 'private' && place.ownerId !== currentUserId) {
@@ -185,10 +188,11 @@ export const placesMockRoutes: MockRoute[] = [
   }),
 
   defineMockRoute('GET', '/places/:id/comments', ({ pathParams, currentUserId }) => {
+    // Public read: same existence-oracle collapse as GET /places/:id
+    // (ADR-07 C2 names this route explicitly).
     const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
-    if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
-    if (place.visibility === 'private' && place.ownerId !== currentUserId) {
-      return mockError(403, 'Это место недоступно', 'PLACE_FORBIDDEN')
+    if (!place || (place.visibility === 'private' && place.ownerId !== currentUserId)) {
+      return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
     }
 
     const comments = mockDb.comments

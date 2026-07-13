@@ -160,10 +160,11 @@ Renovate, E2E, Docker. *Why:* avoid over-engineering a learning project.
 
 ## Notable open gaps between docs and code (verify before acting)
 
-- **README status table is stale** (says everything "Not started"). [Confirmed
-  discrepancy]
-- **Backend documented in detail but absent.** [Confirmed]
-- **Refresh-token/cookie flow designed but unimplemented.** [Confirmed]
+- **Backend Phase 1 is complete and verified** (was "documented but absent" —
+  resolved 2026-07-13). README synced to match.
+- **Refresh-token/cookie flow is implemented server-side** (`POST /auth/refresh`,
+  httpOnly cookie) but the frontend doesn't call it on load yet — reload still
+  logs the user out. [Confirmed — Phase 2 work]
 - **Lint/test CI + Dependabot described in `DEPLOYMENT.md` but not present.**
   [Confirmed]
 

@@ -117,3 +117,17 @@ export async function deletePlace(placeId: string, currentUserId: string): Promi
   }
   await prisma.place.delete({ where: { id: placeId } })
 }
+
+// POST /places/:id/photo — owner only. `photoUrl` is the stored public path.
+export async function setPlacePhoto(
+  placeId: string,
+  currentUserId: string,
+  photoUrl: string,
+): Promise<{ photoUrl: string }> {
+  const place = await prisma.place.findUnique({ where: { id: placeId } })
+  if (!place || place.ownerId !== currentUserId) {
+    throw createError(403, 'Нет прав на изменение этого места', 'PLACE_FORBIDDEN')
+  }
+  await prisma.place.update({ where: { id: placeId }, data: { photoUrl } })
+  return { photoUrl }
+}

@@ -8,6 +8,10 @@ import { globalLimiter } from './middleware/rateLimits'
 import { errorHandler } from './middleware/errorHandler'
 import authRoutes from './routes/authRoutes'
 import placeRoutes from './routes/placeRoutes'
+import peopleRoutes from './routes/peopleRoutes'
+import collectionRoutes from './routes/collectionRoutes'
+import feedRoutes from './routes/feedRoutes'
+import profileRoutes from './routes/profileRoutes'
 
 export const logger = pino({
   level: process.env.LOG_LEVEL ?? 'info',
@@ -49,6 +53,10 @@ app.use('/uploads', express.static('uploads'))
 // 7. Routes
 app.use('/auth', authRoutes)
 app.use('/places', placeRoutes)
+app.use('/people', peopleRoutes)
+app.use('/collections', collectionRoutes)
+app.use('/feed', feedRoutes)
+app.use('/profile', profileRoutes)
 
 // Global error handler — must be last
 app.use(errorHandler)

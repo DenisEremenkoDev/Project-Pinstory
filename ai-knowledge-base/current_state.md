@@ -60,6 +60,24 @@
 **Coming Soon teasers** (implemented as required overlays)
 - Routes (profile + place detail), full Map Comparison, notifications.
 
+**Backend (Phase 1 complete, real — not mocked)**
+- Express 5 + Prisma 6 + PostgreSQL 17, layered `routes/ → controllers/ →
+  services/ → mappers/`. Every domain implemented: auth (JWT via `jose`, bcrypt
+  cost 12, httpOnly refresh cookie), places CRUD, photo upload (`multer`),
+  feedback, people (search/follow/close-friend/public places+collections),
+  collections CRUD+membership, comments CRUD, feed (keyset cursor pagination),
+  profile.
+- One reusable `visibility.ts` (`canViewPlace`/`visiblePlacesWhere`) +
+  `placeAccess.ts` (`assertPlaceVisibleForMutation`) — every privacy check routes
+  through these two, not reimplemented per endpoint.
+- `followersCount`/`followingCount` are correctly derived from the `Follow` table
+  here (unlike the mock's static seed numbers — see known issue #3 below).
+- Verified live against a real PostgreSQL instance (27/27 smoke-test assertions
+  covering every Priority-1 case in `.claude/rules/testing.md`) and against the
+  actual frontend with `VITE_USE_MOCKS=false`.
+- The mock layer is unchanged and remains the default; the real backend is
+  opt-in via `VITE_USE_MOCKS=false` + `VITE_API_URL`, same pattern as the map key.
+
 **Deployment**
 - GitHub Pages workflow (`deploy-pages.yml`) — build + deploy on push to `main`,
   base-path handling, optional map key from repo variable.
@@ -82,14 +100,14 @@
 
 ## 3. Missing (documented but not in the repo)
 
-- **Entire backend.** `backend/` is empty. No Express, Prisma schema, Postgres,
-  JWT, bcrypt, multer, helmet/cors/rate-limit, pino. All server behavior is mocked.
-  `BACKEND_INSTRUCTIONS.md` describes the intended implementation.
 - **Live Yandex geosuggest / geocoder** in the add-place form (planned to run
-  through the backend using `YANDEX_GEOCODER_API_KEY`). Currently `AddPlaceForm`
-  uses `DEFAULT_COORDS` when not opened from a map click.
-- **Token persistence / refresh.** Access token is memory-only; there is no
-  bootstrap on load and refresh is a mock no-op → reload logs the user out.
+  through the backend using `YANDEX_GEOCODER_API_KEY`, already present unused in
+  `backend/.env`). Currently `AddPlaceForm` uses `DEFAULT_COORDS` when not opened
+  from a map click. (Roadmap Phase 3.)
+- **Token persistence / refresh, wired into the frontend.** The backend's
+  `POST /auth/refresh` exists and works; the frontend doesn't call it on load —
+  access token is still memory-only, so a reload logs the user out. (Roadmap
+  Phase 2.)
 - **Lint/typecheck/test CI workflow.** `DEPLOYMENT.md` describes a
   lint→typecheck→`vitest run` GitHub Actions pipeline + Dependabot, but only the
   Pages deploy workflow exists in `.github/`.
@@ -102,38 +120,38 @@
 
 ## 4. Known issues & rough edges
 
-1. **Stale README status table.** `README.md` lists auth/profile/places/map/people/
-   overlay/collections/feed as "⏳ Not started," which contradicts the implemented
-   code. Treat `FEATURES_SCOPE.md` + this file as truth; the README needs updating.
-2. **No reload persistence of session** (see above) — expected for a mock-only app,
-   but surprising in manual testing.
-3. **Profile `followersCount`/`followingCount` are static seed numbers** on
-   `MockUser`, not derived from the `follows` table — so following someone does not
-   move the counters. Cosmetic in mocks; the real backend should compute them.
-4. **`isSamePlace` is an approximation** (name or near-coordinates) with no cross-
+1. **No reload persistence of session** — the backend's refresh endpoint exists
+   but the frontend doesn't call it on load; access token is memory-only.
+2. **Mock's `followersCount`/`followingCount` are still static seed numbers** on
+   `MockUser`, not derived from the `follows` table — cosmetic, mock-only. The
+   real backend correctly derives both from the `Follow` table; this is not a bug
+   there, only in the mock's seed data.
+3. **`isSamePlace` is an approximation** (name or near-coordinates) with no cross-
    user place identity; overlaps can be imperfect. This is inherent to the schema,
    not a bug, but worth knowing when reasoning about the overlay.
-5. **Photo dropzone is non-functional** (visual only).
-6. **No focus management in overlays/sheets** (no focus trap / restore) — an
+4. **Photo dropzone (frontend) doesn't call the upload endpoint yet** — the
+   backend's `POST /places/:id/photo` works; `AddPlaceForm`'s dropzone is still a
+   visual stub not wired to it.
+5. **No focus management in overlays/sheets** (no focus trap / restore) — an
    accessibility gap for new modal work.
-7. **`window.confirm`** is used for destructive confirms (delete place / collection /
+6. **`window.confirm`** is used for destructive confirms (delete place / collection /
    comment) — functional but not styled to the design system.
 
 ---
 
 ## 5. Current priorities (inferred)
 
-Per `FEATURES_SCOPE.md` build order, steps 1–17 (frontend against mocks + real map)
-are effectively done; the natural next priorities are:
+Backend Phase 1 (`roadmap.md`) is complete and verified. Natural next priorities,
+in no committed order — confirm with the maintainer:
 
-1. Stand up the real backend (Prisma schema + auth + place/people/collection/feed
-   endpoints) and flip `VITE_USE_MOCKS=false`.
-2. Add token refresh + reload persistence to match the intended auth design.
-3. Implement photo upload and live geosuggest through the backend.
-4. Write the prioritized tests from `TESTING_PLAN.md` (auth, privacy, follows,
-   ownership, validation).
-5. Add the lint/typecheck/test CI workflow + Dependabot; PWA basics (step 19).
-6. Refresh the README status table.
+1. Wire the frontend's photo dropzone to the real `POST /places/:id/photo`.
+2. Add token refresh + reload persistence to match the intended auth design
+   (Phase 2) — the backend endpoint already exists.
+3. Implement live geosuggest through the backend (Phase 3) — the Geocoder key
+   already exists unused.
+4. Write the prioritized tests from `.claude/rules/testing.md` against the real
+   backend (Vitest + Supertest) — none exist yet server-side (Phase 5).
+5. Add the lint/typecheck/test CI workflow + Dependabot; PWA basics (Phase 5).
 
 These are proposals, not committed scope — see [roadmap.md](roadmap.md) and confirm
 with the maintainer before acting.

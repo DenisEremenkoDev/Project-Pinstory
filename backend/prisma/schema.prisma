@@ -43,6 +43,8 @@ model User {
   avatarUrl            String?
   bio                  String?
   status               String?
+  // Seeded string, not a real algorithm (FEATURES_SCOPE.md "Partial by design").
+  trustSignal          String?
   defaultVisibility    Visibility @default(public)
   notificationsEnabled Boolean    @default(true)
   createdAt            DateTime   @default(now())

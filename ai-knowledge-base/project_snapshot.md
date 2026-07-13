@@ -30,19 +30,31 @@ social network — calm, personal, warm minimalism, no engagement mechanics.
 
 ### Current implementation reality (important)
 
-- The repository is **frontend-only right now.** The `backend/` directory exists
-  but is **empty of source files** — no Express/Prisma code is present.
-- All "server" data is served by an **in-memory mock API layer** that plugs into
-  RTK Query as a custom `baseQuery`. A single env flag (`VITE_USE_MOCKS`) swaps
-  the mocks for a real HTTP backend without touching endpoint or component code.
+- **Backend Phase 1 is complete** (`roadmap.md`, all 11 steps). `backend/` is a
+  real Express 5 + Prisma 6 + PostgreSQL 17 project covering every domain: auth
+  (register/login/refresh/logout, JWT via `jose`, bcrypt cost 12, httpOnly refresh
+  cookie), places CRUD, photo upload (`multer`), feedback, people (search/follow/
+  close-friend/public places+collections), collections CRUD+membership, comments
+  CRUD, feed aggregation (keyset cursor pagination), profile — layered as
+  `routes/ → controllers/ → services/ → mappers/`, plus `middleware/`, `lib/`,
+  `schemas/`, `prisma/schema.prisma`. One reusable `services/visibility.ts`
+  (`canViewPlace`/`visiblePlacesWhere`) plus `services/placeAccess.ts`
+  (`assertPlaceVisibleForMutation`) route every privacy check through two
+  functions, not one-off per endpoint, per `.claude/rules/privacy.md`.
+- **Verified live**, twice: 27/27 smoke-test assertions against a real PostgreSQL
+  instance (all Priority-1 privacy/validation invariants from
+  `.claude/rules/testing.md`), and manually in-browser with the frontend's
+  `VITE_USE_MOCKS=false` — the app runs against the real backend with the same
+  observable behavior as the mock.
+- The mock layer (`shared/lib/mockBaseQuery.ts` + `*.mockRoutes.ts`) still exists
+  and remains the default (`VITE_USE_MOCKS` unset ⇒ mocks); the real backend is
+  opt-in via env, same pattern as the map key switch (D12).
 - The map has **two modes**: a placeholder lat/lng→percentage projection (default,
   no key needed) and the **real Yandex Maps JS API 3.0** (activated when
   `VITE_YANDEX_MAPS_API_KEY` is set).
 
 See [current_state.md](current_state.md) for the precise done/in-progress/missing
-breakdown, and note that `README.md`'s status table is **stale** (it lists
-everything as "Not started" although auth/places/people/collections/feed/map are
-all implemented against mocks).
+breakdown. `README.md` has been synced to reflect Phase 1 completion.
 
 ---
 
@@ -75,9 +87,12 @@ all implemented against mocks).
 - Prettier; ESLint 10 flat config (typescript-eslint, react-hooks, react-refresh)
 - Vitest **3.x** + Testing Library + jsdom
 
-**Backend (documented, NOT implemented):** Node + Express 5, Prisma 6 + PostgreSQL 17,
-JWT via `jose`, `bcryptjs`, `multer`, `helmet`/`cors`/`express-rate-limit`, `pino`.
-See `BACKEND_INSTRUCTIONS.md`. None of this exists in the repo yet.
+**Backend (implemented, Phase 1 complete):** Node + Express **5.2.1**, Prisma **6.19.x**
++ PostgreSQL 17, JWT via `jose`, `bcryptjs` (cost 12), `multer`, `helmet`/`cors`/
+`express-rate-limit`, `pino`/`pino-http`, `cookie-parser`, `dotenv`, Zod for
+request validation. `@types/express` pinned to v4 (v5 types are unstable).
+See `BACKEND_INSTRUCTIONS.md` for the endpoint contracts (schema section is
+outdated — `prisma/schema.prisma` and `mockDb.ts` are the real schema source).
 
 **IDE:** WebStorm. **Deploy target:** GitHub Pages (also Vercel/Netlify-compatible).
 
@@ -361,8 +376,10 @@ imports `authApi` + `authSlice` + `themeSlice`. `UnifiedPlaceCard` and
 
 ## 15. Current Implementation Status (one-line)
 
-Frontend MVP is **substantially implemented against an in-memory mock backend**;
-the real Express/Prisma backend is **not started**; the real Yandex map is wired
-and used when a key is present, but **live geosuggest** in the add-place form is
-still pending. Tests exist only for the feed. Full breakdown:
+Frontend MVP is substantially implemented; the mock backend it was built against
+is now backed by a **real, verified Express/Prisma/PostgreSQL backend** (Phase 1
+complete — all endpoint groups, live-tested). The real Yandex map is wired and
+used when a key is present, but **live geosuggest** in the add-place form is
+still pending (Phase 3). Backend tests (Priority 1 list) are not yet written;
+frontend tests exist only for the feed. Full breakdown:
 [current_state.md](current_state.md).
