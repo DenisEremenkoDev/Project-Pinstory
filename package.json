@@ -37,7 +37,7 @@
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.2.0",
+    "@vitejs/plugin-react": "^6.0.3",
     "@yandex/ymaps3-types": "^1.0.20201695",
     "eslint": "^10.6.0",
     "eslint-config-prettier": "^10.1.8",
