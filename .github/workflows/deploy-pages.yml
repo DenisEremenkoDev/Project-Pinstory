@@ -31,7 +31,7 @@ jobs:
           # If unset, the build still works — the map falls back to the placeholder.
           VITE_YANDEX_MAPS_API_KEY: ${{ vars.VITE_YANDEX_MAPS_API_KEY }}
       - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: ./dist
 
