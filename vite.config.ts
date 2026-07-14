@@ -18,5 +18,9 @@ export default defineConfig({
     environment: 'jsdom',
     setupFiles: './src/setupTests.ts',
     globals: true,
+    // Without this, Vitest's default glob also picks up backend/**/*.test.ts —
+    // those run fine under mocked Prisma, but a real jose SignJWT call resolves
+    // to jose's stricter webapi build under jsdom and throws.
+    include: ['src/**/*.{test,spec}.ts?(x)'],
   },
 })
