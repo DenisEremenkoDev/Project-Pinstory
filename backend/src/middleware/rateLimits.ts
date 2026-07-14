@@ -1,11 +1,17 @@
 import rateLimit from 'express-rate-limit'
 
+// Integration tests (Supertest) fire far more than 10-100 requests per IP within
+// the same 15-minute window by design — skip rate limiting under NODE_ENV=test so
+// that's a property of the harness, not the production limiter logic below.
+const skipInTest = (): boolean => process.env.NODE_ENV === 'test'
+
 // General limit: ~100 requests / 15 min / IP for the whole app.
 export const globalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 100,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipInTest,
   message: { error: { message: 'Слишком много запросов, попробуйте позже', code: 'RATE_LIMIT_EXCEEDED' } },
 })
 
@@ -15,6 +21,7 @@ export const authLimiter = rateLimit({
   max: 10,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: skipInTest,
   message: { error: { message: 'Слишком много попыток, попробуйте позже', code: 'RATE_LIMIT_EXCEEDED' } },
 })
 

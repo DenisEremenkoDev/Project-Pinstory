@@ -14,6 +14,7 @@ dist-ssr
 
 # Env — secrets stay out
 .env
+.env.test
 .env.*.local
 
 # Claude Code personal overrides (auto-created; never shared)
