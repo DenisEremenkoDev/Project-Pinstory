@@ -28,7 +28,8 @@
 - Chronicle "My Memories" with filter chips + date grouping (`PlacesChronicle`).
 - Feedback (like/dislike) per user+place.
 - Comments CRUD with per-author rating and ownership rules.
-- `AddPlaceForm` (photo dropzone is a visual stub; rating/mood/tags/status/visibility real).
+- `AddPlaceForm` (photo upload real, Phase 4 done 2026-07-13 — best-effort after
+  place creation; rating/mood/tags/status/visibility real).
 
 **People**
 - Search, follow/unfollow, close-friend toggle (guarded), friend profile with
@@ -95,10 +96,6 @@
   key is present; the placeholder remains the default path.
 - **People recommendations** are a simplified heuristic (seeded `trustSignal`
   strings), not a real similar-taste algorithm — by design for MVP.
-- **Photo upload** — the real backend's `POST /places/:id/photo` works (Phase 1
-  Step 5, `multer`); the frontend's add-place dropzone is still a decorative
-  `div` with no click handler or file input, and never calls it. `photoUrl`
-  stays `null` end-to-end until this is wired up.
 - **Tests** — only the feed is covered (`FeedItemCard.test.tsx`,
   `FeedPage.test.tsx`). `TESTING_PLAN.md` prioritizes auth/access/privacy/follows,
   which are **not yet tested**.
@@ -107,14 +104,6 @@
 
 ## 3. Missing (documented but not in the repo)
 
-- **Live Yandex geosuggest / geocoder** in the add-place form (planned to run
-  through the backend using `YANDEX_GEOCODER_API_KEY`, already present unused in
-  `backend/.env`). Currently `AddPlaceForm` uses `DEFAULT_COORDS` when not opened
-  from a map click. (Roadmap Phase 3.)
-- **Token persistence / refresh, wired into the frontend.** The backend's
-  `POST /auth/refresh` exists and works; the frontend doesn't call it on load —
-  access token is still memory-only, so a reload logs the user out. (Roadmap
-  Phase 2.)
 - **Lint/typecheck/test CI workflow.** `DEPLOYMENT.md` describes a
   lint→typecheck→`vitest run` GitHub Actions pipeline + Dependabot, but only the
   Pages deploy workflow exists in `.github/`.
@@ -127,38 +116,31 @@
 
 ## 4. Known issues & rough edges
 
-1. **No reload persistence of session** — the backend's refresh endpoint exists
-   but the frontend doesn't call it on load; access token is memory-only.
-2. **Mock's `followersCount`/`followingCount` are still static seed numbers** on
+1. **Mock's `followersCount`/`followingCount` are still static seed numbers** on
    `MockUser`, not derived from the `follows` table — cosmetic, mock-only. The
    real backend correctly derives both from the `Follow` table; this is not a bug
    there, only in the mock's seed data.
-3. **`isSamePlace` is an approximation** (name or near-coordinates) with no cross-
+2. **`isSamePlace` is an approximation** (name or near-coordinates) with no cross-
    user place identity; overlaps can be imperfect. This is inherent to the schema,
    not a bug, but worth knowing when reasoning about the overlay.
-4. **Photo dropzone (frontend) doesn't call the upload endpoint yet** — the
-   backend's `POST /places/:id/photo` works; `AddPlaceForm`'s dropzone is still a
-   visual stub not wired to it.
-5. **No focus management in overlays/sheets** (no focus trap / restore) — an
+3. **No focus management in overlays/sheets** (no focus trap / restore) — an
    accessibility gap for new modal work.
-6. **`window.confirm`** is used for destructive confirms (delete place / collection /
+4. **`window.confirm`** is used for destructive confirms (delete place / collection /
    comment) — functional but not styled to the design system.
 
 ---
 
 ## 5. Current priorities (inferred)
 
-Backend Phase 1 (`roadmap.md`) is complete and verified. Natural next priorities,
+Phases 1–4 (`roadmap.md`) are complete and verified. Natural next priorities,
 in no committed order — confirm with the maintainer:
 
-1. Wire the frontend's photo dropzone to the real `POST /places/:id/photo`.
-2. Add token refresh + reload persistence to match the intended auth design
-   (Phase 2) — the backend endpoint already exists.
-3. Implement live geosuggest through the backend (Phase 3) — the Geocoder key
-   already exists unused.
-4. Write the prioritized tests from `.claude/rules/testing.md` against the real
-   backend (Vitest + Supertest) — none exist yet server-side (Phase 5).
-5. Add the lint/typecheck/test CI workflow + Dependabot; PWA basics (Phase 5).
+1. Write the prioritized tests from `.claude/rules/testing.md` against the real
+   backend (Vitest + Supertest) — none exist yet server-side beyond one unit
+   test for `geocodeService` (Phase 5).
+2. Add the lint/typecheck/test CI workflow + Dependabot; PWA basics (Phase 5).
+3. Replace `window.confirm`; add focus management to sheets/overlays (Phase 5,
+   proposal-level).
 
 These are proposals, not committed scope — see [roadmap.md](roadmap.md) and confirm
 with the maintainer before acting.

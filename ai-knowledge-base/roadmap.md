@@ -53,11 +53,13 @@ The frontend is done against mocks; the biggest gap is the absent backend
 
 ---
 
-## Phase 2 — Close the auth/session gaps [Proposal]
+## Phase 2 — Close the auth/session gaps
 
-- Implement refresh-token flow + silent re-auth on load so a reload no longer logs
-  the user out (currently token is memory-only, refresh is a mock no-op).
-- Bootstrap the session on app start (call refresh → set access token → render).
+- **[Done, 2026-07-13]** `POST /auth/refresh` in `authApi.ts` + mock (mock always
+  401 — no real cookie storage, by design per D8); `credentials:'include'` on
+  `fetchBaseQuery`; `useSessionBootstrap` hook gates `App.tsx` behind a silent
+  refresh attempt on load. Reload no longer logs the user out when running
+  against the real backend. Mock mode is unaffected (still memory-only, by design).
 
 ---
 
@@ -78,10 +80,19 @@ The frontend is done against mocks; the biggest gap is the absent backend
 
 ---
 
-## Phase 4 — Media & content [Confirmed direction]
+## Phase 4 — Media & content
 
-- **[Confirmed]** Real photo upload (`POST /places/:id/photo`) wired to the add-place
-  dropzone and place-card/detail imagery (currently `photoUrl` is always null).
+- **[Done, 2026-07-13]** Real photo upload wired end-to-end. Backend
+  `POST /places/:id/photo` (multer, JPEG/PNG/WebP, 5MB cap) already existed
+  since Phase 1 Step 5; this closed the frontend gap — `AddPlaceForm`'s photo
+  slot is now a real `<label>`+hidden file input with client-side validation
+  (`photoConstraints.ts`, shared with the mock's server-side check), a new
+  `uploadPhoto` mutation (`placesApi.ts`), and a mock route mirroring the real
+  backend's precedence (file-shape check before ownership). Upload runs
+  best-effort after place creation (needs a real `placeId`) — a failed photo
+  attach doesn't block the save, by explicit maintainer decision.
+  `UnifiedPlaceCard`/`PlaceDetailView` already rendered `photoUrl` correctly;
+  no display-side changes were needed.
 
 ---
 
@@ -93,9 +104,10 @@ The frontend is done against mocks; the biggest gap is the absent backend
 - **[Confirmed]** Add the lint → typecheck → `vitest run` GitHub Actions CI and
   Dependabot described in `DEPLOYMENT.md` (only the Pages deploy workflow exists).
 - **[Confirmed]** PWA basics (build step 19): `manifest.json`, icons, install-to-home.
-- **[Proposal]** Refresh the stale `README.md` status table to match reality;
-  replace `window.confirm` destructive prompts with an on-brand confirm dialog;
-  add focus management to sheets/overlays.
+- **[Done, 2026-07-13]** ~~Refresh the stale `README.md` status table~~ — done
+  alongside Phase 1's completion.
+- **[Proposal]** Replace `window.confirm` destructive prompts with an on-brand
+  confirm dialog; add focus management to sheets/overlays.
 
 ---
 

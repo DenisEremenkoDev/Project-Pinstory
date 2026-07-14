@@ -1,6 +1,7 @@
 import { defineMockRoute, mockError, type MockRoute } from '../../shared/lib/mockBaseQuery'
 import { mockDb, nextMockId, type MockPlace, type MockPlaceComment } from '../../shared/lib/mockDb'
 import type { GeocodeResultDto, Mood, PlaceStatus, Sentiment, Visibility } from '../../shared/lib/apiTypes'
+import { ALLOWED_PHOTO_TYPES, MAX_PHOTO_BYTES } from './photoConstraints'
 
 const STATUSES: PlaceStatus[] = ['want_to_visit', 'planned', 'favorite']
 const VISIBILITIES: Visibility[] = ['public', 'private']
@@ -162,6 +163,31 @@ export const placesMockRoutes: MockRoute[] = [
     mockDb.places = mockDb.places.filter((candidate) => candidate.id !== place.id)
     mockDb.feedback = mockDb.feedback.filter((f) => f.placeId !== place.id)
     return { data: undefined }
+  }),
+
+  defineMockRoute('POST', '/places/:id/photo', ({ pathParams, body, currentUserId }) => {
+    // File-shape check comes before the ownership check, matching the real
+    // backend's precedence: multer's fileFilter runs before the controller,
+    // so an invalid file 400s regardless of who owns the place.
+    const file = body instanceof FormData ? body.get('photo') : null
+    if (
+      !(file instanceof File) ||
+      !ALLOWED_PHOTO_TYPES.includes(file.type) ||
+      file.size > MAX_PHOTO_BYTES
+    ) {
+      return mockError(400, 'Недопустимый файл изображения', 'INVALID_FILE')
+    }
+
+    const place = findOwnedPlace(pathParams.id ?? '', currentUserId)
+    if (!place) return mockError(403, 'Нет прав на изменение этого места', 'PLACE_FORBIDDEN')
+
+    // The mock has no real file storage — a session-only blob URL stands in
+    // for the backend's saved-to-disk path. Never persisted across reload,
+    // same as the rest of mockDb. Revoke the previous one to avoid leaking
+    // blob URLs across repeated uploads within the same session.
+    if (place.photoUrl?.startsWith('blob:')) URL.revokeObjectURL(place.photoUrl)
+    place.photoUrl = URL.createObjectURL(file)
+    return { data: { photoUrl: place.photoUrl } }
   }),
 
   defineMockRoute('POST', '/places/:id/feedback', ({ pathParams, body, currentUserId }) => {

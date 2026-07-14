@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Controller, useForm } from 'react-hook-form'
 import {
@@ -14,9 +14,10 @@ import { StarRatingInput } from '../../shared/ui/StarRatingInput'
 import { MoodPicker } from '../../shared/ui/MoodPicker'
 import { getApiErrorMessage } from '../../shared/lib/getApiErrorMessage'
 import { PLACE_STATUS_LABELS, type GeocodeResultDto } from '../../shared/lib/apiTypes'
-import { useCreatePlaceMutation } from './placesApi'
+import { useCreatePlaceMutation, useUploadPhotoMutation } from './placesApi'
 import { addPlaceSchema, type AddPlaceFormValues } from './addPlaceSchema'
 import { LocationSearchSheet } from './LocationSearchSheet'
+import { ALLOWED_PHOTO_TYPES, MAX_PHOTO_BYTES } from './photoConstraints'
 import styles from './AddPlaceForm.module.css'
 
 // Placeholder coordinates until the real Yandex Maps geosuggest/map-click
@@ -35,8 +36,12 @@ interface AddPlaceFormProps {
 
 export function AddPlaceForm({ onSaved, coords }: AddPlaceFormProps) {
   const [createPlace, { isLoading }] = useCreatePlaceMutation()
+  const [uploadPhoto] = useUploadPhotoMutation()
   const [isLocationSearchOpen, setLocationSearchOpen] = useState(false)
   const [searchedLocation, setSearchedLocation] = useState<GeocodeResultDto | null>(null)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
 
   const {
     register,
@@ -61,9 +66,37 @@ export function AddPlaceForm({ onSaved, coords }: AddPlaceFormProps) {
     setValue('name', result.name)
   }
 
+  function handlePhotoChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+
+    if (!ALLOWED_PHOTO_TYPES.includes(file.type)) {
+      setPhotoError('Поддерживаются только JPEG, PNG и WebP')
+      return
+    }
+    if (file.size > MAX_PHOTO_BYTES) {
+      setPhotoError('Файл слишком большой — максимум 5 МБ')
+      return
+    }
+
+    setPhotoError(null)
+    setPhotoFile(file)
+    setPhotoPreviewUrl((previous) => {
+      if (previous) URL.revokeObjectURL(previous)
+      return URL.createObjectURL(file)
+    })
+  }
+
+  useEffect(() => {
+    return () => {
+      if (photoPreviewUrl) URL.revokeObjectURL(photoPreviewUrl)
+    }
+  }, [photoPreviewUrl])
+
   async function onSubmit(values: AddPlaceFormValues) {
     try {
-      await createPlace({
+      const place = await createPlace({
         ...(resolvedCoords ?? DEFAULT_COORDS),
         name: values.name,
         rating: values.rating,
@@ -78,6 +111,15 @@ export function AddPlaceForm({ onSaved, coords }: AddPlaceFormProps) {
         visibility: values.visibility,
         mood: values.mood ?? null,
       }).unwrap()
+
+      if (photoFile) {
+        // Best-effort: the memory is already saved: a failed photo attach
+        // must not block onSaved() or hide the successful save behind an error.
+        await uploadPhoto({ placeId: place.id, file: photoFile })
+          .unwrap()
+          .catch((error: unknown) => console.error('Photo upload failed', error))
+      }
+
       onSaved()
     } catch (error) {
       setError('root', { message: getApiErrorMessage(error, 'Не удалось сохранить место') })
@@ -91,10 +133,29 @@ export function AddPlaceForm({ onSaved, coords }: AddPlaceFormProps) {
           Новое воспоминание
         </Typography>
 
-        <div className={styles.photoDropzone}>
-          <span className="material-symbols-rounded">add_a_photo</span>
-          <span>Добавить фото</span>
-        </div>
+        <label
+          className={styles.photoDropzone}
+          aria-label={photoPreviewUrl ? 'Изменить фото' : 'Добавить фото'}
+        >
+          <input
+            type="file"
+            accept={ALLOWED_PHOTO_TYPES.join(',')}
+            onChange={handlePhotoChange}
+            className={styles.photoInput}
+          />
+          {photoPreviewUrl ? (
+            <>
+              <img src={photoPreviewUrl} alt="" className={styles.photoPreview} />
+              <span className={styles.photoPreviewCaption}>Нажмите, чтобы изменить</span>
+            </>
+          ) : (
+            <>
+              <span className="material-symbols-rounded">add_a_photo</span>
+              <span>Добавить фото</span>
+            </>
+          )}
+        </label>
+        {photoError && <Typography color="error">{photoError}</Typography>}
 
         <button
           type="button"

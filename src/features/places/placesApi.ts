@@ -60,6 +60,18 @@ export const placesApi = api.injectEndpoints({
       ],
     }),
 
+    uploadPhoto: builder.mutation<{ photoUrl: string }, { placeId: string; file: File }>({
+      query: ({ placeId, file }) => {
+        const formData = new FormData()
+        formData.append('photo', file)
+        return { url: `/places/${placeId}/photo`, method: 'POST', body: formData }
+      },
+      invalidatesTags: (_result, _error, { placeId }) => [
+        { type: 'Place', id: placeId },
+        { type: 'Place', id: 'LIST' },
+      ],
+    }),
+
     setFeedback: builder.mutation<FeedbackResponse, { placeId: string; sentiment: Sentiment }>({
       query: ({ placeId, sentiment }) => ({
         url: `/places/${placeId}/feedback`,
@@ -120,6 +132,7 @@ export const {
   useCreatePlaceMutation,
   useUpdatePlaceMutation,
   useDeletePlaceMutation,
+  useUploadPhotoMutation,
   useSetFeedbackMutation,
   useClearFeedbackMutation,
   useGetPlaceCommentsQuery,
