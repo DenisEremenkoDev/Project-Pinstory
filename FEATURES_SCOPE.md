@@ -51,15 +51,9 @@ All of the following are **real features** with a working data layer, not placeh
 
 ### Still missing inside the MVP
 
-These are **in scope and unbuilt** — the remaining work, not new features. See `roadmap.md`.
-
-- The entire backend (`backend/` is empty; everything runs on the mock)
-- Photo upload (`POST /places/:id/photo`) — the dropzone is a visual stub
-- Live Yandex geosuggest / geocoding, routed **through the backend**
-- Token refresh + session bootstrap (a reload currently logs the user out)
-- The prioritized tests in `.claude/rules/testing.md` — 21 Priority-1 cases, none written
-- Lint/typecheck/test CI
-- PWA basics: `manifest.json`, icons, install-to-home
+Nothing — every item tracked here is built. See `roadmap.md` Phase 5 for the
+closing history (backend, photo upload, geosuggest, session bootstrap,
+Priority-1 tests, CI, PWA basics all done as of 2026-07-16).
 
 ---
 

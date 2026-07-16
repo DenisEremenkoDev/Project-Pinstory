@@ -98,14 +98,27 @@ The frontend is done against mocks; the biggest gap is the absent backend
 
 ## Phase 5 — Quality & delivery [Confirmed direction]
 
-- **[Confirmed]** Write the prioritized tests from `TESTING_PLAN.md`: auth, access
-  rights, follows, place/collection privacy, Zod validation. Only the feed is tested
-  today. Use `test-writer` after implementing risky logic.
-- **[Confirmed]** Add the lint → typecheck → `vitest run` GitHub Actions CI and
-  Dependabot described in `DEPLOYMENT.md` (only the Pages deploy workflow exists).
-- **[Confirmed]** PWA basics (build step 19): `manifest.json`, icons, install-to-home.
-- **[Done, 2026-07-13]** ~~Refresh the stale `README.md` status table~~ — done
-  alongside Phase 1's completion.
+- **[Done, 2026-07-16]** Priority-1 backend tests (`testing.md` items 1-16) as
+  Supertest integration tests against a dedicated Neon test-branch database:
+  `backend/src/routes/*.integration.test.ts` (auth, places, people, feedback,
+  comments, collections). Rate limiting is skipped under `NODE_ENV=test`.
+  Fixed a real pre-existing bug this surfaced: the root Vitest config had no
+  `include` scope, so `npm run test` silently picked up `backend/**/*.test.ts`
+  too — harmless while those were mocked-Prisma unit tests, but a real `jose`
+  `SignJWT` call resolves to a stricter webapi build under jsdom and throws.
+  Scoped root Vitest to `src/**`.
+- **[Done, 2026-07-16]** `.github/workflows/ci.yml` (lint / frontend build+test /
+  backend build+migrate+test against an ephemeral Postgres 17 service
+  container — no Neon secret needed in CI) and `.github/dependabot.yml`
+  (root, `backend/`, github-actions, weekly).
+- **[Done, 2026-07-16]** PWA basics (build step 19): `public/manifest.json`,
+  `public/icons/{icon-192,icon-512,icon-maskable-512,apple-touch-icon}.png`
+  (rasterized from the existing `favicon.svg` mark via a disposable Playwright
+  script, not committed), a minimal `public/sw.js` (no caching strategy — just
+  enough for Chrome's installability check) registered in `main.tsx`
+  (production-only). `index.html` gained the manifest link, theme-color, and
+  Apple PWA meta tags. Verified in a real browser: manifest/sw/icons all 200,
+  service worker registers and activates, no regressions.
 - **[Proposal]** Replace `window.confirm` destructive prompts with an on-brand
   confirm dialog; add focus management to sheets/overlays.
 
