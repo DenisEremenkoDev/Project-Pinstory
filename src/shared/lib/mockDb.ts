@@ -150,6 +150,20 @@ export const mockDb = {
       defaultVisibility: 'public',
       notificationsEnabled: true,
     },
+    {
+      id: 'user-admin',
+      email: 'admin@mail.com',
+      password: 'admin123',
+      displayName: 'Admin',
+      avatarUrl: null,
+      bio: null,
+      status: null,
+      followersCount: 0,
+      followingCount: 0,
+      trustSignal: null,
+      defaultVisibility: 'public',
+      notificationsEnabled: true,
+    },
   ] as MockUser[],
 
   follows: [
