@@ -17,7 +17,7 @@ import { MapOnThisDay } from '../MapOnThisDay'
 import { MapPins, type MapLayer } from '../MapPins'
 import { YandexMap } from '../YandexMap'
 import { computeOverlayView, type OverlayFilter } from '../mapOverlayFilter'
-import { useGetPlacesQuery } from '../placesApi'
+import { useGetPlaceQuery, useGetPlacesQuery } from '../placesApi'
 import styles from './MapPage.module.css'
 
 interface MapFocusState {
@@ -49,6 +49,16 @@ export function MapPage() {
   const { data: places, isLoading, isError, refetch } = useGetPlacesQuery()
   const { data: friendPlaces } = useGetPersonPlacesQuery(overlayFriendId ?? '', { skip: !overlayFriendId })
 
+  // A geo-jump to someone else's place (not comparison mode — see above):
+  // fetch just that one place so it can be shown as a single pin, focused,
+  // without pulling in the rest of its owner's places or the overlay UI.
+  // Skipped once comparison mode is on (that pin is already in `friendPlaces`)
+  // or the place turns out to already be one of the caller's own.
+  const isOwnFocusPlace = places?.some((place) => place.id === openPlaceId) ?? true
+  const { data: focusPlace } = useGetPlaceQuery(openPlaceId ?? '', {
+    skip: !openPlaceId || !!overlayFriendId || isOwnFocusPlace,
+  })
+
   // Clear the router state once consumed so navigating back to /map (e.g.
   // via the bottom nav) doesn't keep re-focusing the same place. This only
   // syncs with the external router history, never local component state.
@@ -67,12 +77,20 @@ export function MapPage() {
     { source: 'own', places: view.own.map((place) => ({ place })) },
     {
       source: 'friend',
-      places: view.friend.map(({ place, shared }) => ({
-        place,
-        variant: shared ? ('shared' as const) : ('friend-only' as const),
-      })),
+      places: [
+        ...view.friend.map(({ place, shared }) => ({
+          place,
+          variant: shared ? ('shared' as const) : ('friend-only' as const),
+        })),
+        ...(focusPlace ? [{ place: focusPlace, variant: 'friend-only' as const }] : []),
+      ],
     },
   ]
+
+  const focusCoords =
+    focusPlace && openPlaceId === focusPlace.id
+      ? { latitude: focusPlace.latitude, longitude: focusPlace.longitude }
+      : null
 
   function handleLocateMe() {
     setLocationError(null)
@@ -109,6 +127,7 @@ export function MapPage() {
           onPinTap={(place) => setOpenPlaceId(place.id)}
           onMapClick={setPendingCoords}
           myLocation={myLocation}
+          focusCoords={focusCoords}
         />
       ) : (
         <>

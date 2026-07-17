@@ -25,6 +25,9 @@ interface YandexMapProps {
   onPinTap: (place: PlaceDto) => void
   onMapClick: (coords: { latitude: number; longitude: number }) => void
   myLocation?: { latitude: number; longitude: number } | null
+  // A geo-jump to a single place (own or someone else's) — recenters the
+  // camera without touching myLocation's separate "you are here" dot.
+  focusCoords?: { latitude: number; longitude: number } | null
 }
 
 function initialCenter(layers: MapLayer[]): [number, number] {
@@ -34,7 +37,14 @@ function initialCenter(layers: MapLayer[]): [number, number] {
   return [first.place.longitude, first.place.latitude]
 }
 
-export function YandexMap({ layers, selectedPlaceId, onPinTap, onMapClick, myLocation }: YandexMapProps) {
+export function YandexMap({
+  layers,
+  selectedPlaceId,
+  onPinTap,
+  onMapClick,
+  myLocation,
+  focusCoords,
+}: YandexMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<YMap | null>(null)
   const markersRef = useRef<YMapMarker[]>([])
@@ -152,6 +162,15 @@ export function YandexMap({ layers, selectedPlaceId, onPinTap, onMapClick, myLoc
     if (status !== 'ready' || !map || !myLocation) return
     map.setLocation({ center: [myLocation.longitude, myLocation.latitude], zoom: 15, duration: 300 })
   }, [myLocation, status])
+
+  // Recenter on a geo-jumped place. Keyed on lat/lng (not object identity) so
+  // it doesn't refire on every unrelated parent re-render.
+  useEffect(() => {
+    const map = mapRef.current
+    if (status !== 'ready' || !map || !focusCoords) return
+    map.setLocation({ center: [focusCoords.longitude, focusCoords.latitude], zoom: 15, duration: 300 })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusCoords?.latitude, focusCoords?.longitude, status])
 
   return (
     <div className={styles.map} onClick={(event) => event.stopPropagation()}>
