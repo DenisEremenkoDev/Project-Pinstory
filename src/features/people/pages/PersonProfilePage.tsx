@@ -99,18 +99,14 @@ export function PersonProfilePage() {
                 key={place.id}
                 place={place}
                 onOpen={setOpenPlaceId}
-                onOpenOnMap={() =>
-                  navigate('/map', { state: { focusPlaceId: place.id, focusFriendId: person.id } })
-                }
+                onOpenOnMap={() => navigate('/map', { state: { focusPlaceId: place.id } })}
               />
             ))}
           </div>
         )}
       </div>
 
-      {openPlaceId && (
-        <PlaceDetailView placeId={openPlaceId} focusFriendId={person.id} onClose={() => setOpenPlaceId(null)} />
-      )}
+      {openPlaceId && <PlaceDetailView placeId={openPlaceId} onClose={() => setOpenPlaceId(null)} />}
     </div>
   )
 }

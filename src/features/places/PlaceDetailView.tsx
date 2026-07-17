@@ -19,13 +19,9 @@ import styles from './PlaceDetailView.module.css'
 interface PlaceDetailViewProps {
   placeId: string
   onClose: () => void
-  // Known only when the caller already has it (e.g. the Map's active friend
-  // overlay, or a friend-profile/feed page always about one person) — lets
-  // the geo-jump also activate that friend's pin layer. Omit for own places.
-  focusFriendId?: string
 }
 
-export function PlaceDetailView({ placeId, onClose, focusFriendId }: PlaceDetailViewProps) {
+export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
   const navigate = useNavigate()
   const [isRoutesTeaserOpen, setRoutesTeaserOpen] = useState(false)
   const { data: place, isLoading, isError, refetch } = useGetPlaceQuery(placeId)
@@ -125,9 +121,7 @@ export function PlaceDetailView({ placeId, onClose, focusFriendId }: PlaceDetail
             type="button"
             className={styles.locationButton}
             aria-label="Показать на карте"
-            onClick={() =>
-              navigate('/map', { state: { focusPlaceId: placeId, focusFriendId } })
-            }
+            onClick={() => navigate('/map', { state: { focusPlaceId: placeId } })}
           >
             <span className="material-symbols-rounded">location_on</span>
           </button>

@@ -26,9 +26,7 @@ export function FeedItemCard({ item, onOpenPlace }: FeedItemCardProps) {
   const [error, setErrorMessage] = useState<string | null>(null)
 
   function handleOpenOnMap(place: PlaceDto) {
-    navigate('/map', {
-      state: place.isOwner ? { focusPlaceId: place.id } : { focusPlaceId: place.id, focusFriendId: item.author.id },
-    })
+    navigate('/map', { state: { focusPlaceId: place.id } })
   }
 
   async function handleAddToMine() {

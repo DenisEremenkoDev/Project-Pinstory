@@ -74,31 +74,16 @@ describe('FeedItemCard', () => {
     await waitFor(() => expect(screen.getByRole('button', { name: 'Добавлено' })).toBeDisabled())
   })
 
-  it('jumps to the map with the author as focusFriendId for a friend\'s place (isOwner: false)', async () => {
+  // A geo-jump never activates the friend-comparison overlay — only focuses
+  // the single place — regardless of whether it's the viewer's own place or
+  // a friend's (2026-07-17: dropped the old focusFriendId branch entirely).
+  it('jumps to the map with only focusPlaceId, for a friend\'s place as well as one\'s own', async () => {
     mockedUseCreatePlaceMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never)
     mockedNavigate.mockClear()
 
     render(
       <MemoryRouter>
         <FeedItemCard item={ITEM} onOpenPlace={() => {}} />
-      </MemoryRouter>,
-    )
-
-    await userEvent.click(screen.getByRole('button', { name: 'Показать на карте' }))
-
-    expect(mockedNavigate).toHaveBeenCalledWith('/map', {
-      state: { focusPlaceId: 'place-1', focusFriendId: 'author-1' },
-    })
-  })
-
-  it('jumps to the map without focusFriendId for the viewer\'s own place (isOwner: true)', async () => {
-    mockedUseCreatePlaceMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never)
-    mockedNavigate.mockClear()
-    const ownItem: FeedItemDto = { ...ITEM, place: { ...ITEM.place, isOwner: true } }
-
-    render(
-      <MemoryRouter>
-        <FeedItemCard item={ownItem} onOpenPlace={() => {}} />
       </MemoryRouter>,
     )
 

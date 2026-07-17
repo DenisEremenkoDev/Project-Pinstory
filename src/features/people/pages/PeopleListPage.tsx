@@ -118,7 +118,16 @@ export function PeopleListPage() {
           <div className={styles.sectionLabel}>Вам может понравиться</div>
           <div className={styles.list}>
             {recommended.map((person) => (
-              <div key={person.id} className={styles.row}>
+              <div
+                key={person.id}
+                className={styles.row}
+                onClick={() => navigate(`/people/${person.id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') navigate(`/people/${person.id}`)
+                }}
+              >
                 <Avatar id={person.id} name={person.displayName} avatarUrl={person.avatarUrl} />
                 <div className={styles.rowBody}>
                   <div className={styles.rowName}>{person.displayName}</div>
@@ -129,7 +138,10 @@ export function PeopleListPage() {
                 <button
                   type="button"
                   className={styles.followButton}
-                  onClick={() => follow(person.id)}
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    follow(person.id)
+                  }}
                 >
                   Подписаться
                 </button>

@@ -22,7 +22,6 @@ import styles from './MapPage.module.css'
 
 interface MapFocusState {
   focusPlaceId: string
-  focusFriendId?: string
 }
 
 export function MapPage() {
@@ -39,7 +38,10 @@ export function MapPage() {
   const [isPickerOpen, setPickerOpen] = useState(false)
   const [isNotificationsTeaserOpen, setNotificationsTeaserOpen] = useState(false)
   const [pendingCoords, setPendingCoords] = useState<{ latitude: number; longitude: number } | null>(null)
-  const [overlayFriendId, setOverlayFriendId] = useState<string | null>(focusState?.focusFriendId ?? null)
+  // A geo-jump never activates the full friend-comparison overlay — only the
+  // explicit "Сравнить карты" picker does. Opening a single friend's place
+  // should just show that place, not switch the whole map into comparison mode.
+  const [overlayFriendId, setOverlayFriendId] = useState<string | null>(null)
   const [overlayFilter, setOverlayFilter] = useState<OverlayFilter>('all')
   const [myLocation, setMyLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [locationError, setLocationError] = useState<string | null>(null)
@@ -226,13 +228,7 @@ export function MapPage() {
         />
       )}
 
-      {openPlaceId && (
-        <PlaceDetailView
-          placeId={openPlaceId}
-          focusFriendId={overlayFriendId ?? undefined}
-          onClose={() => setOpenPlaceId(null)}
-        />
-      )}
+      {openPlaceId && <PlaceDetailView placeId={openPlaceId} onClose={() => setOpenPlaceId(null)} />}
 
       {isNotificationsTeaserOpen && (
         <ComingSoon
