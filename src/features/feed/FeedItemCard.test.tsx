@@ -1,5 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { describe, expect, it, vi } from 'vitest'
 import type { FeedItemDto } from '../../shared/lib/apiTypes'
 import { FeedItemCard } from './FeedItemCard'
@@ -8,6 +9,12 @@ import { useCreatePlaceMutation } from '../places/placesApi'
 vi.mock('../places/placesApi', () => ({
   useCreatePlaceMutation: vi.fn(),
 }))
+
+const mockedNavigate = vi.fn()
+vi.mock('react-router', async () => {
+  const actual = await vi.importActual<typeof import('react-router')>('react-router')
+  return { ...actual, useNavigate: () => mockedNavigate }
+})
 
 const mockedUseCreatePlaceMutation = vi.mocked(useCreatePlaceMutation)
 
@@ -39,7 +46,11 @@ describe('FeedItemCard', () => {
     const createPlace = vi.fn().mockReturnValue({ unwrap })
     mockedUseCreatePlaceMutation.mockReturnValue([createPlace, { isLoading: false }] as never)
 
-    render(<FeedItemCard item={ITEM} onOpenPlace={() => {}} />)
+    render(
+      <MemoryRouter>
+        <FeedItemCard item={ITEM} onOpenPlace={() => {}} />
+      </MemoryRouter>,
+    )
 
     await userEvent.click(screen.getByRole('button', { name: 'Добавить к себе' }))
 
@@ -52,10 +63,47 @@ describe('FeedItemCard', () => {
     const createPlace = vi.fn().mockReturnValue({ unwrap })
     mockedUseCreatePlaceMutation.mockReturnValue([createPlace, { isLoading: false }] as never)
 
-    render(<FeedItemCard item={ITEM} onOpenPlace={() => {}} />)
+    render(
+      <MemoryRouter>
+        <FeedItemCard item={ITEM} onOpenPlace={() => {}} />
+      </MemoryRouter>,
+    )
 
     await userEvent.click(screen.getByRole('button', { name: 'Добавить к себе' }))
 
     await waitFor(() => expect(screen.getByRole('button', { name: 'Добавлено' })).toBeDisabled())
+  })
+
+  it('jumps to the map with the author as focusFriendId for a friend\'s place (isOwner: false)', async () => {
+    mockedUseCreatePlaceMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never)
+    mockedNavigate.mockClear()
+
+    render(
+      <MemoryRouter>
+        <FeedItemCard item={ITEM} onOpenPlace={() => {}} />
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Показать на карте' }))
+
+    expect(mockedNavigate).toHaveBeenCalledWith('/map', {
+      state: { focusPlaceId: 'place-1', focusFriendId: 'author-1' },
+    })
+  })
+
+  it('jumps to the map without focusFriendId for the viewer\'s own place (isOwner: true)', async () => {
+    mockedUseCreatePlaceMutation.mockReturnValue([vi.fn(), { isLoading: false }] as never)
+    mockedNavigate.mockClear()
+    const ownItem: FeedItemDto = { ...ITEM, place: { ...ITEM.place, isOwner: true } }
+
+    render(
+      <MemoryRouter>
+        <FeedItemCard item={ownItem} onOpenPlace={() => {}} />
+      </MemoryRouter>,
+    )
+
+    await userEvent.click(screen.getByRole('button', { name: 'Показать на карте' }))
+
+    expect(mockedNavigate).toHaveBeenCalledWith('/map', { state: { focusPlaceId: 'place-1' } })
   })
 })

@@ -149,11 +149,11 @@ export async function getPersonPlaces(
     orderBy: { createdAt: 'desc' },
   })
 
-  const feedback = currentUserId
-    ? await prisma.placeFeedback.findMany({
-        where: { userId: currentUserId, placeId: { in: places.map((p) => p.id) } },
-      })
-    : []
+  // myFeedback is targetId's (the place owner's) own recommendation, shown to
+  // every viewer — not the caller's personal reaction (superseded D4, 2026-07-16).
+  const feedback = await prisma.placeFeedback.findMany({
+    where: { userId: targetId, placeId: { in: places.map((p) => p.id) } },
+  })
   const feedbackByPlace = new Map(feedback.map((f) => [f.placeId, f.sentiment]))
 
   return places.map((place) => toPlaceDto(place, currentUserId, feedbackByPlace.get(place.id) ?? null))

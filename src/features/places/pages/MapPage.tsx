@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { MouseEvent } from 'react'
+import { useLocation, useNavigate } from 'react-router'
 import { ComingSoon } from '../../../shared/ui/ComingSoon'
 import { BottomSheet } from '../../../shared/ui/BottomSheet'
 import { Loader } from '../../../shared/ui/Loader'
@@ -12,23 +13,46 @@ import { PlaceDetailView } from '../PlaceDetailView'
 import { MapSearchSheet } from '../MapSearchSheet'
 import { MapFriendPicker } from '../MapFriendPicker'
 import { MapFriendOverlay } from '../MapFriendOverlay'
+import { MapOnThisDay } from '../MapOnThisDay'
 import { MapPins, type MapLayer } from '../MapPins'
 import { YandexMap } from '../YandexMap'
 import { computeOverlayView, type OverlayFilter } from '../mapOverlayFilter'
 import { useGetPlacesQuery } from '../placesApi'
 import styles from './MapPage.module.css'
 
+interface MapFocusState {
+  focusPlaceId: string
+  focusFriendId?: string
+}
+
 export function MapPage() {
-  const [openPlaceId, setOpenPlaceId] = useState<string | null>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // Cross-tab "show on the map" jump (UnifiedPlaceCard's geo button, from
+  // Chronicle / Feed / a friend's profile) arrives as router state — read it
+  // as the initial value directly rather than setState-in-an-effect.
+  const focusState = location.state as MapFocusState | null
+
+  const [openPlaceId, setOpenPlaceId] = useState<string | null>(focusState?.focusPlaceId ?? null)
   const [isSearchOpen, setSearchOpen] = useState(false)
   const [isPickerOpen, setPickerOpen] = useState(false)
   const [isNotificationsTeaserOpen, setNotificationsTeaserOpen] = useState(false)
   const [pendingCoords, setPendingCoords] = useState<{ latitude: number; longitude: number } | null>(null)
-  const [overlayFriendId, setOverlayFriendId] = useState<string | null>(null)
+  const [overlayFriendId, setOverlayFriendId] = useState<string | null>(focusState?.focusFriendId ?? null)
   const [overlayFilter, setOverlayFilter] = useState<OverlayFilter>('all')
+  const [myLocation, setMyLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [locationError, setLocationError] = useState<string | null>(null)
 
   const { data: places, isLoading, isError, refetch } = useGetPlacesQuery()
   const { data: friendPlaces } = useGetPersonPlacesQuery(overlayFriendId ?? '', { skip: !overlayFriendId })
+
+  // Clear the router state once consumed so navigating back to /map (e.g.
+  // via the bottom nav) doesn't keep re-focusing the same place. This only
+  // syncs with the external router history, never local component state.
+  useEffect(() => {
+    if (focusState) navigate(location.pathname, { replace: true, state: null })
+  }, [focusState, location.pathname, navigate])
 
   if (isLoading) return <Loader />
   if (isError || !places) return <ErrorState onRetry={refetch} />
@@ -48,6 +72,23 @@ export function MapPage() {
     },
   ]
 
+  function handleLocateMe() {
+    setLocationError(null)
+    if (!navigator.geolocation) {
+      setLocationError('Геолокация не поддерживается этим браузером')
+      return
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setMyLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+      },
+      () => {
+        setLocationError('Не удалось определить местоположение — проверьте доступ к геолокации')
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    )
+  }
+
   // Placeholder-mode only: with the real map, clicks come from YandexMap's
   // ymaps3 listener with genuine geo coordinates instead of this projection.
   function handleMapClick(event: MouseEvent<HTMLDivElement>) {
@@ -65,6 +106,7 @@ export function MapPage() {
           selectedPlaceId={openPlaceId}
           onPinTap={(place) => setOpenPlaceId(place.id)}
           onMapClick={setPendingCoords}
+          myLocation={myLocation}
         />
       ) : (
         <>
@@ -93,6 +135,17 @@ export function MapPage() {
             <button
               type="button"
               className={styles.iconButton}
+              aria-label="Моё местоположение"
+              onClick={(event) => {
+                event.stopPropagation()
+                handleLocateMe()
+              }}
+            >
+              <span className="material-symbols-rounded">my_location</span>
+            </button>
+            <button
+              type="button"
+              className={styles.iconButton}
               aria-label="Уведомления"
               onClick={() => setNotificationsTeaserOpen(true)}
             >
@@ -112,10 +165,26 @@ export function MapPage() {
           <span className="material-symbols-rounded">search</span>
           Искать места, воспоминания, настроения
         </button>
+
+        {locationError && (
+          <div className={styles.locationError} onClick={(event) => event.stopPropagation()}>
+            <span>{locationError}</span>
+            <button type="button" onClick={() => setLocationError(null)} aria-label="Скрыть">
+              <span className="material-symbols-rounded">close</span>
+            </button>
+          </div>
+        )}
       </div>
 
+      <MapOnThisDay places={places} onOpenPlace={setOpenPlaceId} />
+
       {!hasRealMapsKey && (
-        <MapPins layers={layers} selectedPlaceId={openPlaceId} onPinTap={(place) => setOpenPlaceId(place.id)} />
+        <MapPins
+          layers={layers}
+          selectedPlaceId={openPlaceId}
+          onPinTap={(place) => setOpenPlaceId(place.id)}
+          myLocation={myLocation}
+        />
       )}
 
       {overlayFriendId && (
@@ -158,7 +227,11 @@ export function MapPage() {
       )}
 
       {openPlaceId && (
-        <PlaceDetailView placeId={openPlaceId} onClose={() => setOpenPlaceId(null)} />
+        <PlaceDetailView
+          placeId={openPlaceId}
+          focusFriendId={overlayFriendId ?? undefined}
+          onClose={() => setOpenPlaceId(null)}
+        />
       )}
 
       {isNotificationsTeaserOpen && (

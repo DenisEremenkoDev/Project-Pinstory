@@ -15,6 +15,7 @@ export function FeedPage() {
   const [view, setView] = useState<FeedView>('mine')
   const [cursor, setCursor] = useState<string | undefined>(undefined)
   const [openPlaceId, setOpenPlaceId] = useState<string | null>(null)
+  const [openFriendId, setOpenFriendId] = useState<string | undefined>(undefined)
 
   const {
     data,
@@ -49,7 +50,12 @@ export function FeedPage() {
       </div>
 
       {view === 'mine' ? (
-        <PlacesChronicle onOpenPlace={setOpenPlaceId} />
+        <PlacesChronicle
+          onOpenPlace={(id) => {
+            setOpenPlaceId(id)
+            setOpenFriendId(undefined)
+          }}
+        />
       ) : isLoading ? (
         <Loader />
       ) : isError && !data ? (
@@ -64,7 +70,14 @@ export function FeedPage() {
         <>
           <div className={styles.list}>
             {data.items.map((item) => (
-              <FeedItemCard key={item.place.id} item={item} onOpenPlace={setOpenPlaceId} />
+              <FeedItemCard
+                key={item.place.id}
+                item={item}
+                onOpenPlace={(id) => {
+                  setOpenPlaceId(id)
+                  setOpenFriendId(item.place.isOwner ? undefined : item.author.id)
+                }}
+              />
             ))}
           </div>
 
@@ -91,7 +104,7 @@ export function FeedPage() {
       )}
 
       {openPlaceId && (
-        <PlaceDetailView placeId={openPlaceId} onClose={() => setOpenPlaceId(null)} />
+        <PlaceDetailView placeId={openPlaceId} focusFriendId={openFriendId} onClose={() => setOpenPlaceId(null)} />
       )}
     </div>
   )

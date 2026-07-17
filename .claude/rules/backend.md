@@ -51,7 +51,7 @@ The hosting target is **undecided** (ADR-01). Therefore:
 ## Data notes
 - Coordinates are plain `Float` `lat`/`lng`. **No PostGIS** — there are no spatial queries in this product (ADR-02).
 - `followersCount` / `followingCount` **must be derived from the `Follow` table**, never stored. The mock uses static seed values and lies about this (known issue #3, ADR-05).
-- `myFeedback` / `isOwner` are computed per request, never columns.
+- `myFeedback` / `isOwner` are computed per request, never columns. `isOwner` is per-viewer; `myFeedback` is the **place owner's own recommendation**, the same for every viewer — only the owner may set it (revised 2026-07-16, decisions.md D4).
 - `PlaceFeedback` is `@@unique([userId, placeId])` — an upsert, not an insert.
 - Unfollowing must also clear `isCloseFriend`.
 

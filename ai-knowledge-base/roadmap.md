@@ -128,9 +128,106 @@ The frontend is done against mocks; the biggest gap is the absent backend
 
 From `FEATURES_SCOPE.md` "future ideas": full Map Comparison (filters, intersection
 stats, shared-visit history), a real "similar taste" ML recommendation algorithm,
-Routes, Shared Walks, "Today", Smart Suggestions, "On this day", a "From friends"
+Routes, Shared Walks, "Today", Smart Suggestions, a "From friends"
 feed tab/algorithm. Each needs its own design pass before implementation. Until then
 they remain `ComingSoon` teasers.
+
+**"On this day" moved out of this backlog on 2026-07-16** (explicit maintainer
+request) — see Phase 6 below.
+
+---
+
+## Phase 6 — Design-fidelity pass + "On this day" (2026-07-16)
+
+Triggered by a maintainer visual QA pass after Phase 5 closed. `@design-auditor`
+audits confirmed real drift, not just "looks different":
+
+- **Geo-jump icon.** `UnifiedPlaceCard` already implements a `near_me` button
+  (`onOpenOnMap` prop) matching the mockup (FEED TAB, source lines 449/473;
+  FRIEND PROFILE OVERLAY 740) — but none of its three call sites
+  (`PlacesChronicle`, `FeedItemCard`, `PersonProfilePage`) ever pass the prop,
+  so it never renders anywhere. Fix requires more than passing a callback:
+  `MapPage` has no way today to receive "open with place X focused" from
+  another tab — needs a navigation-state/query-param mechanism.
+- **Stale feedback badge.** `setFeedback`/`clearFeedback` in `placesApi.ts`
+  only invalidate `Place` tags, not `Feed`/`Person` — liking a place from its
+  detail view doesn't refresh the heart/flag badge on feed cards or a
+  friend-profile card for that same place until an unrelated full refetch.
+  Real bug, fix the tag graph.
+- **Profile screen drift.** Settings is a `BottomSheet` form; the mockup is a
+  full-screen overlay with "Приватность"/"Уведомления" section headers. Stat
+  cards, the routes-teaser card, avatar size, and top safe-area inset also
+  drifted from the mock. `ProfilePage.tsx`'s live collections preview grid and
+  `design.md`'s documented "Avatar 80 + status + bio + 3-up stats" composition
+  are intentional deviations from the literal mock, not bugs — kept as-is.
+- **Collections privacy — turned out already fully built.** The maintainer's
+  ask ("настраивать коллекцию публичной или приватной, приватная — скрыта от
+  всех") is exactly `Collection.visibility`, already wired end-to-end:
+  `CollectionForm`'s public/private `Switch`, the 🔒 icon in `CollectionsPage`,
+  and both the mock and real `collectionService.ts` already filter followed
+  users' private collections out entirely. No new Settings toggle needed —
+  the mockup's "Защищать коллекции кодом" (a PIN-code idea) was a red herring;
+  what the maintainer actually wanted already exists per-collection.
+- **"On this day" map memory — moved into MVP scope by explicit request.**
+  Original ask was framed as a Settings notification toggle; turned out the
+  real feature is a dismissible card on the Map tab surfacing own places added
+  on this calendar day in a previous year, tap → that place's detail. Decided
+  **always-on, no settings toggle** (maintainer's explicit choice — simpler,
+  like Google Photos' "memories"). Computed **client-side** from the
+  already-loaded own-places list (`GET /places` already returns every own
+  place with `createdAt`) — no new endpoint, no DTO change, no backend work.
+- **Geo-jump from the detail view.** `PlaceDetailView`'s location pin next to
+  the date was decorative — made it a real geo-jump button (same
+  `focusPlaceId`/`focusFriendId` router-state mechanism as the card version).
+  All three renderers of `PlaceDetailView` (`MapPage`, `FeedPage`,
+  `PersonProfilePage`) now thread through the friend id they already have.
+- **Current-location button on the Map.** New `my_location` header icon —
+  `navigator.geolocation.getCurrentPosition`, recenters the real Yandex map
+  (`YMap.setLocation`) and renders a "you are here" dot in both real and
+  placeholder rendering paths. On permission denial: an inline dismissible
+  error banner, **not a toast** (the project has no toast system — `TOAST` is
+  explicitly Vision-scope per `design.md`).
+- **Status/feedback model redesign — the largest change in this pass, revised
+  D4 (decisions.md), 2026-07-16, explicit maintainer request.** Original ask
+  ("remove the three status labels, replace with Liked/Not Recommended, and
+  show a friend's own rating") turned out to require reversing a foundational
+  decision, not a relabel:
+  - **`myFeedback` is now the place OWNER's own recommendation, identical for
+    every viewer** — not each viewer's independent personal reaction. Only
+    the owner may `POST`/`DELETE /places/:id/feedback` now (403 for anyone
+    else, even on a fully visible public place — new behavior, previously
+    "anyone who can see it can react").
+  - **`PlaceDetailView`** lost the three-status chip row (`want_to_visit`/
+    `planned`/`favorite`, owner-editable) and the separate feedback cycling
+    button. Replaced by **one** tappable chip cycling
+    «Хочу посетить» → «Рекомендую» → «Не рекомендую» (owner) / read-only for
+    everyone else, driven entirely by `myFeedback` — `setFeedback`/
+    `clearFeedback`, not `updatePlace`. The `status` enum itself is
+    **unchanged** (still exactly `want_to_visit`/`planned`/`favorite`, still
+    set once at `AddPlaceForm` creation, per `CLAUDE.md`'s lock) — it is
+    simply no longer edited or displayed after creation.
+  - **"Запланировано" collapsed into "Хочу посетить"** everywhere a filter
+    used to read raw `status`: `PlacesChronicle`'s chip, `mapOverlayFilter`'s
+    `ownWantToVisit`/`friendWantToVisit`, both now test `myFeedback === null`
+    instead of `status === 'want_to_visit'`. `mapOverlayFilter`'s `favorites`
+    filter now tests `myFeedback === 'like'` instead of `status === 'favorite'`.
+  - **`hasVisited()`** (`mapMatching.ts`) redefined as
+    `status !== 'want_to_visit' || myFeedback !== null`, so places created
+    before this change (with a real `planned`/`favorite` status but no
+    feedback row) still count correctly in the friend-overlay comparison.
+  - Backend: new shared `getOwnerFeedbackMap` helper
+    (`backend/src/services/ownerFeedback.ts`) used by `feedService`,
+    `peopleService`, `collectionService`; `placeService.getPlaceDetail` and
+    the mock routes query feedback by `place.ownerId`, not `currentUserId`.
+    `feedbackService.setFeedback`/`clearFeedback` now assert ownership
+    (`assertPlaceOwnedForFeedback`), not merely visibility.
+  - `UnifiedPlaceCard`'s heart/flag badge needed **no code change** — it
+    already renders from `myFeedback`, which now carries the new meaning
+    automatically. Same for `PlacesChronicle`'s own-place filtering (viewer
+    is always the owner there, so behavior for own places is unchanged).
+  - `AddPlaceForm`'s creation-time status picker is untouched — still offers
+    all three `PLACE_STATUS_LABELS` values, deliberately, since this change
+    is scoped to post-creation display/editing only.
 
 ---
 

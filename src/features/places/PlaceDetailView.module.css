@@ -75,6 +75,16 @@
   color: var(--color-accent);
 }
 
+.locationButton {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+}
+
 .title {
   font: var(--text-title1);
   color: var(--color-text-primary);
@@ -82,26 +92,35 @@
   margin-bottom: var(--space-3);
 }
 
-.statusRow {
-  display: flex;
-  gap: var(--space-2);
-  flex-wrap: wrap;
-  margin-bottom: var(--space-4);
-}
-
-.statusChip {
-  border: none;
+.recommendationChip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  width: fit-content;
+  border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-2) var(--space-4);
   background: var(--color-surface-sunken);
-  color: var(--color-text-primary);
+  padding: var(--space-2) var(--space-4);
+  margin-bottom: var(--space-4);
   cursor: pointer;
+  color: var(--color-text-tertiary);
   font: var(--text-caption);
 }
 
-.statusChip.statusChipActive {
-  background: var(--color-primary);
-  color: var(--color-surface-raised);
+.recommendationChipReadonly {
+  cursor: default;
+}
+
+.recommendationChip.like {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: var(--color-danger-subtle);
+}
+
+.recommendationChip.dislike {
+  border-color: var(--color-text-tertiary);
+  color: var(--color-text-primary);
+  background: var(--color-surface-sunken);
 }
 
 .ratingRow {
@@ -156,31 +175,6 @@
   background: var(--color-surface-sunken);
   color: var(--color-text-primary);
   font: var(--text-caption);
-}
-
-.feedbackChip {
-  display: flex;
-  align-items: center;
-  gap: var(--space-1);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  background: var(--color-surface-raised);
-  padding: var(--space-2) var(--space-4);
-  cursor: pointer;
-  color: var(--color-text-tertiary);
-  font: var(--text-caption);
-}
-
-.feedbackChip.like {
-  border-color: var(--color-danger);
-  color: var(--color-danger);
-  background: var(--color-danger-subtle);
-}
-
-.feedbackChip.dislike {
-  border-color: var(--color-text-tertiary);
-  color: var(--color-text-primary);
-  background: var(--color-surface-sunken);
 }
 
 .tags {

@@ -1,6 +1,7 @@
 import { prisma } from '../prisma'
 import { createError } from '../middleware/errorHandler'
 import { toPlaceDto, type PlaceDto } from '../mappers/placeMapper'
+import { getOwnerFeedbackMap } from './ownerFeedback'
 import type { CreateCollectionInput, UpdateCollectionInput } from '../schemas/collectionSchemas'
 
 export interface OwnCollectionDto {
@@ -26,10 +27,11 @@ async function placesInCollection(collectionId: string, viewerId: string): Promi
     where: { collectionId },
     include: { place: true },
   })
-  const feedback = await prisma.placeFeedback.findMany({
-    where: { userId: viewerId, placeId: { in: memberships.map((m) => m.placeId) } },
-  })
-  const feedbackByPlace = new Map(feedback.map((f) => [f.placeId, f.sentiment]))
+  // myFeedback is each place's OWNER's own recommendation, not the collection
+  // viewer's personal reaction (superseded D4, 2026-07-16).
+  const feedbackByPlace = await getOwnerFeedbackMap(
+    memberships.map((m) => ({ id: m.place.id, ownerId: m.place.ownerId })),
+  )
 
   return memberships.map((m) => toPlaceDto(m.place, viewerId, feedbackByPlace.get(m.placeId) ?? null))
 }

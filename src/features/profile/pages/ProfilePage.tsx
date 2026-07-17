@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { Avatar } from '../../../shared/ui/Avatar'
-import { BottomSheet } from '../../../shared/ui/BottomSheet'
 import { ComingSoon } from '../../../shared/ui/ComingSoon'
 import { ErrorState } from '../../../shared/ui/ErrorState'
 import { Loader } from '../../../shared/ui/Loader'
@@ -23,6 +22,16 @@ export function ProfilePage() {
   const { user } = profile
   const previewCollections = (collections?.own ?? []).slice(0, 3)
 
+  if (isSettingsOpen) {
+    return (
+      <ProfileSettingsForm
+        user={user}
+        onClose={() => setSettingsOpen(false)}
+        onSaved={() => setSettingsOpen(false)}
+      />
+    )
+  }
+
   return (
     <div>
       <button
@@ -35,7 +44,7 @@ export function ProfilePage() {
       </button>
 
       <div className={styles.header}>
-        <Avatar id={user.id} name={user.displayName} avatarUrl={user.avatarUrl} size={80} />
+        <Avatar id={user.id} name={user.displayName} avatarUrl={user.avatarUrl} size={88} />
         <span className={styles.name}>{user.displayName}</span>
         {user.status && <span className={styles.status}>{user.status}</span>}
         {user.bio && <p className={styles.bio}>{user.bio}</p>}
@@ -83,12 +92,13 @@ export function ProfilePage() {
       </div>
 
       <button type="button" className={styles.routesTeaser} onClick={() => setRoutesTeaserOpen(true)}>
-        🚧 Маршруты — скоро
+        <span className="material-symbols-rounded">route</span>
+        <span className={styles.routesTeaserText}>
+          <span className={styles.routesTeaserTitle}>Маршруты — уже готовятся</span>
+          <span className={styles.routesTeaserDescription}>Совместные прогулки и общие карты скоро здесь</span>
+        </span>
+        <span className="material-symbols-rounded">chevron_right</span>
       </button>
-
-      <BottomSheet open={isSettingsOpen} onClose={() => setSettingsOpen(false)}>
-        <ProfileSettingsForm user={user} onSaved={() => setSettingsOpen(false)} />
-      </BottomSheet>
 
       {isRoutesTeaserOpen && (
         <ComingSoon

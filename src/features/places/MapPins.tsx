@@ -16,12 +16,13 @@ interface MapPinsProps {
   layers: MapLayer[]
   selectedPlaceId: string | null
   onPinTap: (place: PlaceDto) => void
+  myLocation?: { latitude: number; longitude: number } | null
 }
 
 // Renders every pin layer (own places + an optional friend overlay layer)
 // from one array, per CLAUDE.md: the map must accept `layers` rather than a
 // single hardcoded list, since the friend overlay needs a second pin layer.
-export function MapPins({ layers, selectedPlaceId, onPinTap }: MapPinsProps) {
+export function MapPins({ layers, selectedPlaceId, onPinTap, myLocation }: MapPinsProps) {
   return (
     <>
       {layers.map((layer) =>
@@ -47,6 +48,18 @@ export function MapPins({ layers, selectedPlaceId, onPinTap }: MapPinsProps) {
           )
         }),
       )}
+
+      {myLocation &&
+        (() => {
+          const { top, left } = projectToPercent(myLocation.latitude, myLocation.longitude)
+          return (
+            <div
+              className={styles.myLocationDot}
+              style={{ top: `${top}%`, left: `${left}%` }}
+              aria-hidden="true"
+            />
+          )
+        })()}
     </>
   )
 }

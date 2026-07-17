@@ -13,10 +13,11 @@ import styles from './ProfileSettingsForm.module.css'
 
 interface ProfileSettingsFormProps {
   user: ProfileDto['user']
+  onClose: () => void
   onSaved: () => void
 }
 
-export function ProfileSettingsForm({ user, onSaved }: ProfileSettingsFormProps) {
+export function ProfileSettingsForm({ user, onClose, onSaved }: ProfileSettingsFormProps) {
   const dispatch = useAppDispatch()
   const themeMode = useAppSelector((state) => state.theme.mode)
   const [updateProfile, { isLoading }] = useUpdateProfileMutation()
@@ -64,69 +65,86 @@ export function ProfileSettingsForm({ user, onSaved }: ProfileSettingsFormProps)
   }
 
   return (
-    <Stack component="form" onSubmit={handleSubmit(onSubmit)} gap={2}>
-      <Typography variant="h5" component="h2" className={styles.title}>
-        Настройки профиля
-      </Typography>
+    <div className={styles.overlay}>
+      <div className={styles.topBar}>
+        <button type="button" className={styles.backButton} onClick={onClose} aria-label="Назад">
+          <span className="material-symbols-rounded">arrow_back</span>
+        </button>
+        <span className={styles.title}>Настройки</span>
+      </div>
 
-      <TextField
-        label="Имя"
-        {...register('displayName')}
-        error={!!errors.displayName}
-        helperText={errors.displayName?.message}
-      />
+      <Stack component="form" onSubmit={handleSubmit(onSubmit)} gap={2} className={styles.content}>
+        <Typography component="h3" className={styles.sectionTitle}>
+          Профиль
+        </Typography>
 
-      <TextField label="Ссылка на аватар" placeholder="https://…" {...register('avatarUrl')} />
+        <TextField
+          label="Имя"
+          {...register('displayName')}
+          error={!!errors.displayName}
+          helperText={errors.displayName?.message}
+        />
 
-      <TextField label="О себе" multiline minRows={2} {...register('bio')} />
+        <TextField label="Ссылка на аватар" placeholder="https://…" {...register('avatarUrl')} />
 
-      <TextField label="Статус" placeholder="Короткая строка под именем" {...register('status')} />
+        <TextField label="О себе" multiline minRows={2} {...register('bio')} />
 
-      <Controller
-        control={control}
-        name="defaultVisibility"
-        render={({ field }) => (
-          <FormControlLabel
-            control={
-              <Switch
-                checked={field.value === 'private'}
-                onChange={(event) => field.onChange(event.target.checked ? 'private' : 'public')}
-              />
-            }
-            label={
-              field.value === 'private'
-                ? 'Новые места по умолчанию приватные'
-                : 'Новые места по умолчанию публичные'
-            }
-          />
-        )}
-      />
+        <TextField label="Статус" placeholder="Короткая строка под именем" {...register('status')} />
 
-      <Controller
-        control={control}
-        name="notificationsEnabled"
-        render={({ field }) => (
-          <FormControlLabel
-            control={<Switch checked={field.value} onChange={(event) => field.onChange(event.target.checked)} />}
-            label="Уведомления на почту"
-          />
-        )}
-      />
+        <Typography component="h3" className={styles.sectionTitle}>
+          Приватность
+        </Typography>
 
-      <FormControlLabel
-        control={<Switch checked={themeMode === 'dark'} onChange={() => dispatch(toggleTheme())} />}
-        label="Тёмная тема"
-      />
+        <Controller
+          control={control}
+          name="defaultVisibility"
+          render={({ field }) => (
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={field.value === 'private'}
+                  onChange={(event) => field.onChange(event.target.checked ? 'private' : 'public')}
+                />
+              }
+              label={
+                field.value === 'private'
+                  ? 'Новые места по умолчанию приватные'
+                  : 'Новые места по умолчанию публичные'
+              }
+            />
+          )}
+        />
 
-      {errors.root && <Typography color="error">{errors.root.message}</Typography>}
+        <Typography component="h3" className={styles.sectionTitle}>
+          Уведомления
+        </Typography>
 
-      <Button type="submit" variant="contained" disabled={isLoading}>
-        {isLoading ? 'Сохраняем…' : 'Сохранить'}
-      </Button>
+        <Controller
+          control={control}
+          name="notificationsEnabled"
+          render={({ field }) => (
+            <FormControlLabel
+              control={<Switch checked={field.value} onChange={(event) => field.onChange(event.target.checked)} />}
+              label="Уведомления на почту"
+            />
+          )}
+        />
 
-      <Button type="button" variant="outlined" color="error" className={styles.logoutButton} onClick={handleLogout}>
-        Выйти
-      </Button>
-    </Stack>
+        <FormControlLabel
+          control={<Switch checked={themeMode === 'dark'} onChange={() => dispatch(toggleTheme())} />}
+          label="Тёмная тема"
+        />
+
+        {errors.root && <Typography color="error">{errors.root.message}</Typography>}
+
+        <Button type="submit" variant="contained" disabled={isLoading}>
+          {isLoading ? 'Сохраняем…' : 'Сохранить'}
+        </Button>
+
+        <Button type="button" variant="outlined" color="error" className={styles.logoutButton} onClick={handleLogout}>
+          Выйти
+        </Button>
+      </Stack>
+    </div>
   )
 }

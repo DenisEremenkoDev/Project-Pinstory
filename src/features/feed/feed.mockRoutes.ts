@@ -37,8 +37,10 @@ export const feedMockRoutes: MockRoute[] = [
         type: feedTypeFor(place),
         place: {
           ...place,
+          // The place owner's own recommendation, not the feed viewer's
+          // personal reaction (superseded D4, 2026-07-16).
           myFeedback:
-            mockDb.feedback.find((f) => f.placeId === place.id && f.userId === currentUserId)
+            mockDb.feedback.find((f) => f.placeId === place.id && f.userId === place.ownerId)
               ?.sentiment ?? null,
           isOwner: place.ownerId === currentUserId,
         },

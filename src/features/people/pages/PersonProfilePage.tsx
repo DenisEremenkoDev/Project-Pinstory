@@ -95,14 +95,21 @@ export function PersonProfilePage() {
         ) : (
           <div className={styles.list}>
             {places.map((place) => (
-              <UnifiedPlaceCard key={place.id} place={place} onOpen={setOpenPlaceId} />
+              <UnifiedPlaceCard
+                key={place.id}
+                place={place}
+                onOpen={setOpenPlaceId}
+                onOpenOnMap={() =>
+                  navigate('/map', { state: { focusPlaceId: place.id, focusFriendId: person.id } })
+                }
+              />
             ))}
           </div>
         )}
       </div>
 
       {openPlaceId && (
-        <PlaceDetailView placeId={openPlaceId} onClose={() => setOpenPlaceId(null)} />
+        <PlaceDetailView placeId={openPlaceId} focusFriendId={person.id} onClose={() => setOpenPlaceId(null)} />
       )}
     </div>
   )

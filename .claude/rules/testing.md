@@ -28,7 +28,7 @@ Principle from `TESTING_PLAN.md`: **do not chase coverage.** Test where logic ca
 11. `PATCH /people/:id/close-friend` without following first → **403**
 12. `GET /people/:id/places` does not return that user's private places — **not even to a follower**
 13. The friend map overlay: same guarantee — public places yes, private never, under any condition
-14. `POST /places/:id/feedback` on an invisible private place → **403**
+14. `POST /places/:id/feedback` on an invisible private place → **403**. Also, since 2026-07-16, feedback is the place **owner's own recommendation** (decisions.md D4) — a non-owner gets **403** even on a fully **visible public** place; it is no longer "anyone who can see it can react."
 15. `POST /places/:id/comments` on an invisible private place → **403**; on a visible **public** place owned by someone else → **201** (anyone who can see it can comment)
 16. `PATCH` / `DELETE /collections/:id` on someone else's collection → **403**
 
@@ -39,9 +39,10 @@ Principle from `TESTING_PLAN.md`: **do not chase coverage.** Test where logic ca
 3. `authSlice` — state transitions correctly on login and logout
 4. `UnifiedPlaceCard` — a tap in **any** of the three contexts (own / friend's / feed) opens the **same** detail screen
 5. **Regression: `PlaceDetailView` never shows a "Посетил" status, under any data.** The status was removed by explicit request; this test exists so it cannot creep back in. The Chronicle filter list must likewise never offer it.
+6. **Regression: `PlaceDetailView`'s recommendation chip (Хочу посетить / Рекомендую / Не рекомендую) is tappable for the owner and read-only for a non-owner** (2026-07-16, decisions.md D4). A non-owner must never be able to trigger `setFeedback`/`clearFeedback` from this screen.
 
 ## Priority 2
-Feedback is unique per (user, place) — a repeat call overwrites `sentiment`, never duplicates (`@@unique([userId, placeId])`) · `POST /auth/refresh` with an expired/invalid token → 401 · `GET /feed` excludes users the caller does not follow · unfollowing also clears `isCloseFriend` · the heart/flag badge follows `myFeedback` · `Loader`/`ErrorState` render on `isLoading`/`isError` · `ComingSoon` renders its props and the button is clickable · Chronicle chips filter correctly.
+Feedback is unique per (user, place) — a repeat call overwrites `sentiment`, never duplicates (`@@unique([userId, placeId])`) · `POST /auth/refresh` with an expired/invalid token → 401 · `GET /feed` excludes users the caller does not follow · unfollowing also clears `isCloseFriend` · the recommendation chip/badge follows `myFeedback`, which since 2026-07-16 is the **place owner's** value, identical for every viewer (decisions.md D4) · `Loader`/`ErrorState` render on `isLoading`/`isError` · `ComingSoon` renders its props and the button is clickable · Chronicle chips filter correctly.
 
 ## Do not test
 Pixel-perfect visual fidelity (compare against tokens instead) · static `ComingSoon` placeholders — no logic, nothing to assert · design tokens.

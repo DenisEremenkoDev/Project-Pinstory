@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { Avatar } from '../../shared/ui/Avatar'
 import { UnifiedPlaceCard } from '../../shared/ui/UnifiedPlaceCard'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
 import { getApiErrorMessage } from '../../shared/lib/getApiErrorMessage'
-import type { FeedItemDto, FeedItemType } from '../../shared/lib/apiTypes'
+import type { FeedItemDto, FeedItemType, PlaceDto } from '../../shared/lib/apiTypes'
 import { useCreatePlaceMutation } from '../places/placesApi'
 import styles from './FeedItemCard.module.css'
 
@@ -19,9 +20,16 @@ interface FeedItemCardProps {
 }
 
 export function FeedItemCard({ item, onOpenPlace }: FeedItemCardProps) {
+  const navigate = useNavigate()
   const [createPlace, { isLoading }] = useCreatePlaceMutation()
   const [isAdded, setAdded] = useState(false)
   const [error, setErrorMessage] = useState<string | null>(null)
+
+  function handleOpenOnMap(place: PlaceDto) {
+    navigate('/map', {
+      state: place.isOwner ? { focusPlaceId: place.id } : { focusPlaceId: place.id, focusFriendId: item.author.id },
+    })
+  }
 
   async function handleAddToMine() {
     setErrorMessage(null)
@@ -53,7 +61,7 @@ export function FeedItemCard({ item, onOpenPlace }: FeedItemCardProps) {
         <span className={styles.date}>{formatLongRuDate(item.createdAt)}</span>
       </div>
 
-      <UnifiedPlaceCard place={item.place} onOpen={onOpenPlace} />
+      <UnifiedPlaceCard place={item.place} onOpen={onOpenPlace} onOpenOnMap={handleOpenOnMap} />
 
       <div className={styles.actions}>
         {!item.place.isOwner && (

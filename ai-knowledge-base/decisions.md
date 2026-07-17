@@ -23,11 +23,24 @@ executable spec for the backend.
 `shared/lib/mockDb.ts` uses join tables (`follows`, `feedback`, `collectionPlaces`,
 `comments`). *Why:* swapping in Postgres/Prisma requires no reshaping.
 
-**D4. `myFeedback` and `isOwner` are computed per viewer, never stored on the place.
-[Confirmed]** `MockPlace = Omit<PlaceDto,'myFeedback'|'isOwner'> & { ownerId }`;
-handlers derive them from `currentUserId`. *Why:* mirrors a real `PlaceFeedback`
-join + per-request auth; storing them worked only by accident with a single seed
-user (documented in `mockDb.ts`).
+**D4. `isOwner` is computed per viewer; `myFeedback` is computed per PLACE OWNER,
+shown to every viewer. [Confirmed, revised 2026-07-16]** `MockPlace =
+Omit<PlaceDto,'myFeedback'|'isOwner'> & { ownerId }`; `isOwner` still derives from
+`currentUserId === ownerId`. **`myFeedback` no longer does** — it used to be each
+viewer's personal reaction (one `PlaceFeedback` row per (viewer, place), settable
+by anyone who could see the place). As of 2026-07-16 (explicit maintainer
+request), a place carries a single owner-set recommendation
+(`want_to_visit` / `like` / `dislike`, surfaced in the UI as «Хочу посетить» /
+«Рекомендую» / «Не рекомендую») that is the same for every viewer. Only the owner
+may set it (`POST`/`DELETE /places/:id/feedback` now 403 a non-owner even on a
+fully visible public place — new behavior, not merely a visibility gate).
+`PlaceFeedback` rows from other users may still exist in old data; every read path
+(`toPlaceDto` callers, mock routes) filters to `WHERE userId = place.ownerId`, not
+`currentUserId`. *Why the reversal:* the maintainer wanted a friend's place to
+show the friend's own opinion, not each viewer's independent one — the previous
+"anyone reacts to anything visible" model was a different feature than what she
+actually wanted (a personal recommendation label, not a social multi-user
+reaction). See `roadmap.md` Phase 6 for the full change list.
 
 **D5. DTOs vs mock entities are separate types. [Confirmed]**
 Wire shapes in `apiTypes.ts` (`*Dto`), storage shapes in `mockDb.ts` (`Mock*`).

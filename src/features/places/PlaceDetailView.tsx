@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { MOOD_EMOJI, MOOD_LABELS, PLACE_STATUS_LABELS, type PlaceStatus } from '../../shared/lib/apiTypes'
+import { useNavigate } from 'react-router'
+import { MOOD_EMOJI, MOOD_LABELS } from '../../shared/lib/apiTypes'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
 import { gradientForId } from '../../shared/lib/gradientPalette'
 import { ComingSoon } from '../../shared/ui/ComingSoon'
@@ -15,14 +16,17 @@ import {
 } from './placesApi'
 import styles from './PlaceDetailView.module.css'
 
-const STATUS_OPTIONS = Object.entries(PLACE_STATUS_LABELS) as [PlaceStatus, string][]
-
 interface PlaceDetailViewProps {
   placeId: string
   onClose: () => void
+  // Known only when the caller already has it (e.g. the Map's active friend
+  // overlay, or a friend-profile/feed page always about one person) — lets
+  // the geo-jump also activate that friend's pin layer. Omit for own places.
+  focusFriendId?: string
 }
 
-export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
+export function PlaceDetailView({ placeId, onClose, focusFriendId }: PlaceDetailViewProps) {
+  const navigate = useNavigate()
   const [isRoutesTeaserOpen, setRoutesTeaserOpen] = useState(false)
   const { data: place, isLoading, isError, refetch } = useGetPlaceQuery(placeId)
   const [setFeedback] = useSetFeedbackMutation()
@@ -51,14 +55,17 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
     )
   }
 
-  function cycleFeedback() {
-    if (place.myFeedback === null) setFeedback({ placeId, sentiment: 'like' })
-    else if (place.myFeedback === 'like') setFeedback({ placeId, sentiment: 'dislike' })
+  // The place owner's single recommendation state — "Хочу посетить" (no
+  // opinion yet) / "Рекомендую" / "Не рекомендую" (2026-07-16: replaces the
+  // old three-way status chip row + separate feedback button; "Запланировано"
+  // and "★ Любимое" as distinct display states are gone, myFeedback now
+  // carries this for everyone, not just the owner — see decisions.md D4).
+  // Only the owner may change it; the underlying `status` enum still exists
+  // (set once at creation) but is no longer edited here.
+  function cycleRecommendation() {
+    if (place!.myFeedback === null) setFeedback({ placeId, sentiment: 'like' })
+    else if (place!.myFeedback === 'like') setFeedback({ placeId, sentiment: 'dislike' })
     else clearFeedback(placeId)
-  }
-
-  function handleStatusTap(status: PlaceStatus) {
-    updatePlace({ id: placeId, status })
   }
 
   function handleRatingTap(rating: number) {
@@ -71,12 +78,12 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
     onClose()
   }
 
-  const feedbackChip =
+  const recommendationChip =
     place.myFeedback === 'like'
       ? { icon: 'favorite', label: 'Рекомендую', className: styles.like }
       : place.myFeedback === 'dislike'
         ? { icon: 'flag', label: 'Не рекомендую', className: styles.dislike }
-        : { icon: 'favorite_border', label: 'Оценить впечатление', className: '' }
+        : { icon: 'explore', label: 'Хочу посетить', className: '' }
 
   return (
     <div className={styles.overlay}>
@@ -114,25 +121,43 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
 
       <div className={styles.content}>
         <div className={styles.metaLine}>
-          <span className="material-symbols-rounded">location_on</span>
+          <button
+            type="button"
+            className={styles.locationButton}
+            aria-label="Показать на карте"
+            onClick={() =>
+              navigate('/map', { state: { focusPlaceId: placeId, focusFriendId } })
+            }
+          >
+            <span className="material-symbols-rounded">location_on</span>
+          </button>
           {formatLongRuDate(place.createdAt)}
         </div>
 
         <span className={styles.title}>{place.name}</span>
 
-        {place.isOwner && (
-          <div className={styles.statusRow}>
-            {STATUS_OPTIONS.map(([value, label]) => (
-              <button
-                key={value}
-                type="button"
-                className={`${styles.statusChip} ${place.status === value ? styles.statusChipActive : ''}`}
-                onClick={() => handleStatusTap(value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+        {place.isOwner ? (
+          <button
+            type="button"
+            className={`${styles.recommendationChip} ${recommendationChip.className}`}
+            onClick={cycleRecommendation}
+          >
+            <span
+              className={`material-symbols-rounded ${place.myFeedback ? 'material-symbols-rounded--filled' : ''}`}
+            >
+              {recommendationChip.icon}
+            </span>
+            {recommendationChip.label}
+          </button>
+        ) : (
+          <span className={`${styles.recommendationChip} ${styles.recommendationChipReadonly} ${recommendationChip.className}`}>
+            <span
+              className={`material-symbols-rounded ${place.myFeedback ? 'material-symbols-rounded--filled' : ''}`}
+            >
+              {recommendationChip.icon}
+            </span>
+            {recommendationChip.label}
+          </span>
         )}
 
         <div className={styles.ratingRow}>
@@ -167,25 +192,13 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
 
         {place.note && <p className={styles.note}>«{place.note}»</p>}
 
-        <div className={styles.chipsRow}>
-          {place.mood && (
+        {place.mood && (
+          <div className={styles.chipsRow}>
             <span className={styles.moodChip}>
               {MOOD_EMOJI[place.mood]} {MOOD_LABELS[place.mood]}
             </span>
-          )}
-          <button
-            type="button"
-            className={`${styles.feedbackChip} ${feedbackChip.className}`}
-            onClick={cycleFeedback}
-          >
-            <span
-              className={`material-symbols-rounded ${place.myFeedback ? 'material-symbols-rounded--filled' : ''}`}
-            >
-              {feedbackChip.icon}
-            </span>
-            {feedbackChip.label}
-          </button>
-        </div>
+          </div>
+        )}
 
         <PlaceComments placeId={placeId} />
 

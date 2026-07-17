@@ -38,19 +38,19 @@ export async function getPlaceDetail(
     throw createError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
   }
 
-  const [myFeedbackRow, commentsCount, likesCount, dislikesCount] = await Promise.all([
-    currentUserId
-      ? prisma.placeFeedback.findUnique({
-          where: { userId_placeId: { userId: currentUserId, placeId } },
-        })
-      : Promise.resolve(null),
+  // myFeedback is the OWNER's own recommendation, shown to every viewer —
+  // not the current viewer's personal reaction (superseded D4, 2026-07-16).
+  const [ownerFeedbackRow, commentsCount, likesCount, dislikesCount] = await Promise.all([
+    prisma.placeFeedback.findUnique({
+      where: { userId_placeId: { userId: place.ownerId, placeId } },
+    }),
     prisma.placeComment.count({ where: { placeId } }),
     prisma.placeFeedback.count({ where: { placeId, sentiment: 'like' } }),
     prisma.placeFeedback.count({ where: { placeId, sentiment: 'dislike' } }),
   ])
 
   return {
-    ...toPlaceDto(place, currentUserId, myFeedbackRow?.sentiment ?? null),
+    ...toPlaceDto(place, currentUserId, ownerFeedbackRow?.sentiment ?? null),
     commentsCount,
     likesCount,
     dislikesCount,

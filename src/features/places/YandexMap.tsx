@@ -24,6 +24,7 @@ interface YandexMapProps {
   selectedPlaceId: string | null
   onPinTap: (place: PlaceDto) => void
   onMapClick: (coords: { latitude: number; longitude: number }) => void
+  myLocation?: { latitude: number; longitude: number } | null
 }
 
 function initialCenter(layers: MapLayer[]): [number, number] {
@@ -33,7 +34,7 @@ function initialCenter(layers: MapLayer[]): [number, number] {
   return [first.place.longitude, first.place.latitude]
 }
 
-export function YandexMap({ layers, selectedPlaceId, onPinTap, onMapClick }: YandexMapProps) {
+export function YandexMap({ layers, selectedPlaceId, onPinTap, onMapClick, myLocation }: YandexMapProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<YMap | null>(null)
   const markersRef = useRef<YMapMarker[]>([])
@@ -97,7 +98,7 @@ export function YandexMap({ layers, selectedPlaceId, onPinTap, onMapClick }: Yan
 
     for (const marker of markersRef.current) map.removeChild(marker)
 
-    markersRef.current = layers.flatMap((layer) =>
+    const placeMarkers = layers.flatMap((layer) =>
       layer.places.map(({ place, variant }) => {
         const element = document.createElement('button')
         element.type = 'button'
@@ -123,7 +124,34 @@ export function YandexMap({ layers, selectedPlaceId, onPinTap, onMapClick }: Yan
         return marker
       }),
     )
-  }, [layers, selectedPlaceId, status])
+
+    const myLocationMarkers = myLocation
+      ? [
+          (() => {
+            const element = document.createElement('div')
+            element.className = styles.myLocationDot
+            element.setAttribute('aria-hidden', 'true')
+            const marker = new ymaps3.YMapMarker(
+              { coordinates: [myLocation.longitude, myLocation.latitude], zIndex: 10 },
+              element,
+            )
+            map.addChild(marker)
+            return marker
+          })(),
+        ]
+      : []
+
+    markersRef.current = [...placeMarkers, ...myLocationMarkers]
+  }, [layers, selectedPlaceId, status, myLocation])
+
+  // Recenter the camera when a fresh "my location" fix comes in — a location
+  // object reference changes on every geolocation call, so this only fires
+  // on an actual new fix, not on unrelated re-renders.
+  useEffect(() => {
+    const map = mapRef.current
+    if (status !== 'ready' || !map || !myLocation) return
+    map.setLocation({ center: [myLocation.longitude, myLocation.latitude], zoom: 15, duration: 300 })
+  }, [myLocation, status])
 
   return (
     <div className={styles.map} onClick={(event) => event.stopPropagation()}>

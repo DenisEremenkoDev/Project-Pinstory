@@ -46,9 +46,14 @@ export const placesApi = api.injectEndpoints({
 
     updatePlace: builder.mutation<PlaceDto, UpdatePlaceRequest>({
       query: ({ id, ...body }) => ({ url: `/places/${id}`, method: 'PATCH', body }),
+      // Same staleness class as setFeedback/clearFeedback below: a visibility
+      // flip (private<->public) can desync a friend's place list or the
+      // feed, and PlaceDto never exposes ownerId to compute a scoped tag.
       invalidatesTags: (_result, _error, { id }) => [
         { type: 'Place', id },
         { type: 'Place', id: 'LIST' },
+        { type: 'Feed', id: 'LIST' },
+        { type: 'Person' },
       ],
     }),
 
@@ -57,6 +62,8 @@ export const placesApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, id) => [
         { type: 'Place', id },
         { type: 'Place', id: 'LIST' },
+        { type: 'Feed', id: 'LIST' },
+        { type: 'Person' },
       ],
     }),
 
@@ -78,9 +85,17 @@ export const placesApi = api.injectEndpoints({
         method: 'POST',
         body: { sentiment },
       }),
+      // A place's myFeedback also appears embedded in feed cards and a
+      // friend's place list — PlaceDto never exposes ownerId to non-owners
+      // (privacy.md), so there's no way to target the one Person-scoped tag
+      // that actually needs refreshing. Invalidating the whole 'Person' type
+      // is the only viable fix; it's a broad hammer but feedback mutations
+      // are infrequent user actions, not hot-path queries.
       invalidatesTags: (_result, _error, { placeId }) => [
         { type: 'Place', id: placeId },
         { type: 'Place', id: 'LIST' },
+        { type: 'Feed', id: 'LIST' },
+        { type: 'Person' },
       ],
     }),
 
@@ -89,6 +104,8 @@ export const placesApi = api.injectEndpoints({
       invalidatesTags: (_result, _error, placeId) => [
         { type: 'Place', id: placeId },
         { type: 'Place', id: 'LIST' },
+        { type: 'Feed', id: 'LIST' },
+        { type: 'Person' },
       ],
     }),
 

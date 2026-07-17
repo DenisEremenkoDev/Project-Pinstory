@@ -1,6 +1,7 @@
 import type { Place } from '@prisma/client'
 import { prisma } from '../prisma'
 import { toPlaceDto } from '../mappers/placeMapper'
+import { getOwnerFeedbackMap } from './ownerFeedback'
 import type { FeedItemType } from '../schemas/feedSchemas'
 
 export interface FeedItemDto {
@@ -66,10 +67,9 @@ export async function getFeed(
   const page = hasMore ? results.slice(0, limit) : results
   const nextCursor = hasMore ? (page[page.length - 1]?.id ?? null) : null
 
-  const feedback = await prisma.placeFeedback.findMany({
-    where: { userId, placeId: { in: page.map((p) => p.id) } },
-  })
-  const feedbackByPlace = new Map(feedback.map((f) => [f.placeId, f.sentiment]))
+  // myFeedback is each place's OWNER's own recommendation, not the feed
+  // viewer's personal reaction (superseded D4, 2026-07-16).
+  const feedbackByPlace = await getOwnerFeedbackMap(page.map((p) => ({ id: p.id, ownerId: p.ownerId })))
 
   const items: FeedItemDto[] = page.map((place) => ({
     type: feedTypeFor(place),

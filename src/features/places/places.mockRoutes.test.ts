@@ -81,3 +81,39 @@ describe('POST /places/:id/photo (mock route)', () => {
     expect(mockDb.places.find((p) => p.id === 'place-1')?.photoUrl).toBe('blob:mock-url')
   })
 })
+
+const setFeedbackRoute = placesMockRoutes.find(
+  (route) => route.method === 'POST' && route.segments.join('/') === 'places/:id/feedback',
+)
+if (!setFeedbackRoute) throw new Error('POST /places/:id/feedback mock route not found')
+
+function callSetFeedback(placeId: string, currentUserId: string | null, sentiment: string) {
+  const ctx: MockRouteContext = {
+    pathParams: { id: placeId },
+    searchParams: new URLSearchParams(),
+    body: { sentiment },
+    currentUserId,
+  }
+  return setFeedbackRoute.handler(ctx)
+}
+
+// Feedback is now the place owner's own recommendation, shown to every
+// viewer — only the owner may set it (decisions.md D4, revised 2026-07-16).
+describe('POST /places/:id/feedback (mock route)', () => {
+  // place-6 is owned by user-2 and PUBLIC (seed data) — under the old
+  // "anyone who can see it can react" model this would have succeeded.
+  it('403 PLACE_FORBIDDEN when the caller does not own the place, even though it is public', () => {
+    const result = callSetFeedback('place-6', 'user-1', 'like')
+
+    expect('error' in result && result.error.status).toBe(403)
+    expect('error' in result && result.error.data.error.code).toBe('PLACE_FORBIDDEN')
+  })
+
+  it('succeeds when the caller owns the place', () => {
+    const result = callSetFeedback('place-1', 'user-1', 'dislike')
+
+    expect('data' in result).toBe(true)
+    const data = 'data' in result ? (result.data as { sentiment: string }) : undefined
+    expect(data?.sentiment).toBe('dislike')
+  })
+})

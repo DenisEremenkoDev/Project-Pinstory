@@ -36,13 +36,14 @@ All of the following are **real features** with a working data layer, not placeh
 | 4 | **Add place (＋)** — bottom sheet: photo, location, name, **star rating set immediately at creation**, note/story, mood, tags, status, visibility | Built (mock) · photo upload and live geosuggest are **not** implemented |
 | 5 | **Chronicle "Мои воспоминания"** — filter chips (Все / ❤️ / 🚩 / Хочу посетить), date-grouped | Built (mock) |
 | 6 | **Unified place card** — **one** component across Chronicle, friend profiles, and the feed. A tap in any context opens the same detail screen. | Built |
-| 7 | **Place detail** — the emotional centre. Inline-editable status and rating (owner), heart/flag feedback, mood, note, comments, tags. | Built (mock) |
+| 7 | **Place detail** — the emotional centre. Inline-editable rating (owner) and a single recommendation chip (owner-only; read-only for everyone else), mood, note, comments, tags. | Built (mock) |
 | 8 | **Comments** — anyone who can see a place can comment, each with their own star rating. Only the author edits or deletes. | Built (mock) |
-| 9 | **Feedback** — heart (like) / flag (dislike), one opinion per user per place | Built (mock) |
+| 9 | **Feedback** — a single owner-set recommendation per place: «Хочу посетить» / «Рекомендую» / «Не рекомендую», visible to everyone who can see the place. **Only the owner can set it** — revised 2026-07-16 from the original "anyone visible can react" model, by explicit maintainer request (see `ai-knowledge-base/decisions.md` D4). "Запланировано"/"★ Любимое" no longer appear as separate states; the underlying `status` enum is unchanged (still set once at creation) but no longer separately editable in the detail view. | Built (mock) |
 | 10 | **Map** — interactive map of own places, click-to-add, in-app search over own places | Built (Yandex Maps 3.0 with a key; projection placeholder without) |
 | 11 | **People** — search by name, follow/unfollow, close-friend toggle (only when following), friend profile with their public places | Built (mock) |
 | 12 | **Basic friend map overlay** — pick a followed person → their public places render as a second pin layer. Filters: all / common / own only / theirs only / favorites / common want-to-visit. | Built (mock) |
 | 13 | **Activity feed** — own + followed users' public places, as cards ("added a place" / "wants to visit" / "added a story"), cursor-paginated | Built (mock) |
+| 14 | **"On this day" map memory** — on the Map tab, a dismissible card surfaces own places added on this calendar day in a previous year ("N лет назад вы сохранили «X»"), tap opens that place's detail. Always shown when there's a match — no settings toggle. Computed client-side from the already-loaded own-places list (no new endpoint, no DTO change). Moved here from "Coming Soon" by explicit maintainer decision, 2026-07-16 — see `roadmap.md`. | Built |
 
 ### Partial by design
 
@@ -82,7 +83,6 @@ Each of these is a **full-overlay teaser** today. Each needs its own design pass
 - **Shared Walks**
 - **"Today"**
 - **Smart Suggestions**
-- **"On this day"**
 - **"От друзей"** as a separate feed tab / recommendation algorithm
 - **Notifications**
 

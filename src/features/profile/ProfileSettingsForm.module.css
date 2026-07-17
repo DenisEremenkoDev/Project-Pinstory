@@ -1,5 +1,47 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--color-surface-raised);
+  overflow-y: auto;
+}
+
+.topBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: calc(env(safe-area-inset-top, 0px) + var(--space-4)) var(--space-4) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.backButton {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: var(--color-surface-sunken);
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
 .title {
-  margin-bottom: var(--space-2);
+  font: var(--text-title3);
+  color: var(--color-text-primary);
+}
+
+.content {
+  padding: var(--space-5) var(--space-4);
+}
+
+.sectionTitle {
+  font: var(--text-caption);
+  color: var(--color-text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: var(--space-2);
 }
 
 .logoutButton {

@@ -27,7 +27,7 @@ globs:
 ## Rules
 
 - **DTOs and mock entities are separate types** (D5). `MockPlace = Omit<PlaceDto,'myFeedback'|'isOwner'> & { ownerId }`. Never merge them.
-- **`myFeedback` and `isOwner` are computed per viewer inside the handler** (D4). Never store them on the entity. They mirror a real `PlaceFeedback` join + per-request auth.
+- **`isOwner` is computed per viewer; `myFeedback` is computed per PLACE OWNER, shown to every viewer** (D4, revised 2026-07-16). Never store either on the entity. Feedback is the owner's own recommendation now — only the owner may `POST`/`DELETE /places/:id/feedback` (403 for anyone else, even on a public place).
 - **Tags:** queries `providesTags` per-id **plus** `LIST`; mutations `invalidatesTags` the affected id(s) **plus** `LIST` (D6). Comments use synthetic ids (`` `${placeId}-comments` ``). A wrong tag graph throws nothing — it just serves stale data, intermittently.
 - **Feed pagination** uses `serializeQueryArgs` / `merge` / `forceRefetch` under one cache key (D7). Do not replace it with page-index pagination.
 - **Error envelope:** `{ error: { message, code } }` — build it with `mockError(status, russianMessage, 'SCREAMING_SNAKE_CODE')`. Codes are English SCREAMING_SNAKE; messages are Russian.

@@ -1,5 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { MemoryRouter } from 'react-router'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import type { FeedItemDto } from '../../../shared/lib/apiTypes'
 import { FeedPage } from './FeedPage'
@@ -67,7 +68,11 @@ describe('FeedPage — "От друзей" error handling', () => {
       refetch,
     } as never)
 
-    render(<FeedPage />)
+    render(
+      <MemoryRouter>
+        <FeedPage />
+      </MemoryRouter>,
+    )
     await openFriendsTab()
 
     expect(screen.getByText('Не удалось загрузить')).toBeInTheDocument()
@@ -84,7 +89,11 @@ describe('FeedPage — "От друзей" error handling', () => {
       refetch,
     } as never)
 
-    render(<FeedPage />)
+    render(
+      <MemoryRouter>
+        <FeedPage />
+      </MemoryRouter>,
+    )
     await openFriendsTab()
 
     expect(screen.getByText('Кофейня у канала')).toBeInTheDocument()

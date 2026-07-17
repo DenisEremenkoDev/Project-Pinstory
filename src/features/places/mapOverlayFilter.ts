@@ -19,8 +19,10 @@ export function computeOverlayView(filter: OverlayFilter, own: PlaceDto[], frien
   const sharedFriendPlaces = friendVisited.filter((fp) => ownVisited.some((op) => isSamePlace(op, fp)))
   const friendOnlyPlaces = friendVisited.filter((fp) => !ownVisited.some((op) => isSamePlace(op, fp)))
 
-  const ownWantToVisit = own.filter((p) => p.status === 'want_to_visit')
-  const friendWantToVisit = friend.filter((p) => p.status === 'want_to_visit')
+  // "хочу посетить" = no recommendation set yet (2026-07-16: "Запланировано"
+  // collapsed into this bucket, so raw `status` is no longer the source of truth).
+  const ownWantToVisit = own.filter((p) => p.myFeedback === null)
+  const friendWantToVisit = friend.filter((p) => p.myFeedback === null)
   const commonWantToVisit = ownWantToVisit.filter((op) => friendWantToVisit.some((fp) => isSamePlace(op, fp)))
   const commonWantToVisitFriend = friendWantToVisit.filter((fp) => commonWantToVisit.some((op) => isSamePlace(op, fp)))
 
@@ -35,7 +37,7 @@ export function computeOverlayView(filter: OverlayFilter, own: PlaceDto[], frien
     case 'friend_only':
       return { own: [], friend: friendOnlyPlaces.map((place) => ({ place, shared: false })) }
     case 'favorites':
-      return { own: own.filter((p) => p.status === 'favorite'), friend: [] }
+      return { own: own.filter((p) => p.myFeedback === 'like'), friend: [] }
     case 'common_want':
       return {
         own: commonWantToVisit,

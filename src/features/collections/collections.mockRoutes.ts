@@ -21,7 +21,10 @@ function placesInCollection(collectionId: string, viewerId: string | null): Plac
     .filter((place) => placeIds.includes(place.id))
     .map((place) => ({
       ...place,
-      myFeedback: mockDb.feedback.find((f) => f.placeId === place.id && f.userId === viewerId)?.sentiment ?? null,
+      // The place owner's own recommendation, not the collection viewer's
+      // personal reaction (superseded D4, 2026-07-16).
+      myFeedback:
+        mockDb.feedback.find((f) => f.placeId === place.id && f.userId === place.ownerId)?.sentiment ?? null,
       isOwner: place.ownerId === viewerId,
     }))
 }

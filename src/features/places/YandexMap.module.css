@@ -53,3 +53,14 @@
 .friendPinOnly {
   background: var(--color-accent);
 }
+
+.myLocationDot {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  border: 3px solid var(--color-surface-raised);
+  box-shadow: var(--shadow-md);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}

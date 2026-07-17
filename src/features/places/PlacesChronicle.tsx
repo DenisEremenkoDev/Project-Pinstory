@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { EmptyState } from '../../shared/ui/EmptyState'
 import { ErrorState } from '../../shared/ui/ErrorState'
 import { Loader } from '../../shared/ui/Loader'
 import { UnifiedPlaceCard } from '../../shared/ui/UnifiedPlaceCard'
 import { formatLongRuDate } from '../../shared/lib/formatDate'
+import type { PlaceDto } from '../../shared/lib/apiTypes'
 import { useGetPlacesQuery } from './placesApi'
 import styles from './PlacesChronicle.module.css'
 
@@ -28,14 +30,21 @@ interface PlacesChronicleProps {
 }
 
 export function PlacesChronicle({ onOpenPlace }: PlacesChronicleProps) {
+  const navigate = useNavigate()
   const [filter, setFilter] = useState<ChronicleFilter>('all')
   const { data: places, isLoading, isError, refetch } = useGetPlacesQuery()
+
+  function handleOpenOnMap(place: PlaceDto) {
+    navigate('/map', { state: { focusPlaceId: place.id } })
+  }
 
   const filteredPlaces = (places ?? []).filter((place) => {
     if (filter === 'all') return true
     if (filter === 'liked') return place.myFeedback === 'like'
     if (filter === 'disliked') return place.myFeedback === 'dislike'
-    return place.status === 'want_to_visit'
+    // "Запланировано" collapsed into "Хочу посетить" (2026-07-16) — this is
+    // now simply "no recommendation set yet", not the raw creation-time status.
+    return place.myFeedback === null
   })
 
   return (
@@ -70,7 +79,7 @@ export function PlacesChronicle({ onOpenPlace }: PlacesChronicleProps) {
             return (
               <div key={place.id}>
                 {showDateHeader && <div className={styles.dateHeader}>{dateLabel}</div>}
-                <UnifiedPlaceCard place={place} onOpen={onOpenPlace} />
+                <UnifiedPlaceCard place={place} onOpen={onOpenPlace} onOpenOnMap={handleOpenOnMap} />
               </div>
             )
           })}

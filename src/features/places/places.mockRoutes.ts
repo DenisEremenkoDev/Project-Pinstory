@@ -112,7 +112,9 @@ export const placesMockRoutes: MockRoute[] = [
     return {
       data: {
         ...place,
-        myFeedback: getMyFeedback(place.id, currentUserId),
+        // The owner's own recommendation, shown to every viewer — not the
+        // current viewer's personal reaction (superseded D4, 2026-07-16).
+        myFeedback: getMyFeedback(place.id, place.ownerId),
         isOwner: place.ownerId === currentUserId,
         commentsCount: mockDb.comments.filter((c) => c.placeId === place.id).length,
         likesCount: countFeedback(place.id, 'like'),
@@ -190,13 +192,16 @@ export const placesMockRoutes: MockRoute[] = [
     return { data: { photoUrl: place.photoUrl } }
   }),
 
+  // Feedback is the place owner's own recommendation, shown to every viewer —
+  // only the owner may set it (superseded D4, 2026-07-16). Owner-only, not
+  // merely visibility-gated: a stranger on a PUBLIC place now also gets 403.
   defineMockRoute('POST', '/places/:id/feedback', ({ pathParams, body, currentUserId }) => {
     if (!currentUserId) return mockError(401, 'Не авторизован', 'UNAUTHORIZED')
 
     const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
     if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
-    if (place.visibility === 'private' && place.ownerId !== currentUserId) {
-      return mockError(403, 'Это место недоступно', 'PLACE_FORBIDDEN')
+    if (place.ownerId !== currentUserId) {
+      return mockError(403, 'Отметить можно только своё место', 'PLACE_FORBIDDEN')
     }
 
     const { sentiment } = body as { sentiment: Sentiment }
@@ -220,8 +225,8 @@ export const placesMockRoutes: MockRoute[] = [
 
     const place = mockDb.places.find((candidate) => candidate.id === pathParams.id)
     if (!place) return mockError(404, 'Место не найдено', 'PLACE_NOT_FOUND')
-    if (place.visibility === 'private' && place.ownerId !== currentUserId) {
-      return mockError(403, 'Это место недоступно', 'PLACE_FORBIDDEN')
+    if (place.ownerId !== currentUserId) {
+      return mockError(403, 'Отметить можно только своё место', 'PLACE_FORBIDDEN')
     }
 
     mockDb.feedback = mockDb.feedback.filter(
