@@ -14,6 +14,7 @@ import { MapSearchSheet } from '../MapSearchSheet'
 import { MapFriendPicker } from '../MapFriendPicker'
 import { MapFriendOverlay } from '../MapFriendOverlay'
 import { MapOnThisDay } from '../MapOnThisDay'
+import { MapPlacePreview } from '../MapPlacePreview'
 import { MapPins, type MapLayer } from '../MapPins'
 import { YandexMap } from '../YandexMap'
 import { computeOverlayView, type OverlayFilter } from '../mapOverlayFilter'
@@ -37,7 +38,7 @@ export function MapPage() {
   // NOT open the place detail overlay on its own (that's a separate action,
   // triggered by actually tapping the pin). Kept apart from openPlaceId so
   // "show me where this is" and "open this place" stay two different things.
-  const [focusPlaceId] = useState<string | null>(focusState?.focusPlaceId ?? null)
+  const [focusPlaceId, setFocusPlaceId] = useState<string | null>(focusState?.focusPlaceId ?? null)
   const [openPlaceId, setOpenPlaceId] = useState<string | null>(null)
   const [isSearchOpen, setSearchOpen] = useState(false)
   const [isPickerOpen, setPickerOpen] = useState(false)
@@ -204,6 +205,14 @@ export function MapPage() {
       </div>
 
       <MapOnThisDay places={places} onOpenPlace={setOpenPlaceId} />
+
+      {focusPlaceId && !openPlaceId && focusPlace && (
+        <MapPlacePreview
+          place={focusPlace}
+          onOpen={() => setOpenPlaceId(focusPlaceId)}
+          onDismiss={() => setFocusPlaceId(null)}
+        />
+      )}
 
       {!hasRealMapsKey && (
         <MapPins

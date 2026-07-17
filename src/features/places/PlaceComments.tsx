@@ -12,6 +12,7 @@ export function PlaceComments({ placeId }: PlaceCommentsProps) {
   const { data: comments } = useGetPlaceCommentsQuery(placeId)
   const [deleteComment] = useDeleteCommentMutation()
   const [editingId, setEditingId] = useState<string | null>(null)
+  const [isComposing, setComposing] = useState(false)
 
   function handleDelete(commentId: string) {
     if (window.confirm('Удалить комментарий?')) deleteComment({ placeId, commentId })
@@ -69,7 +70,14 @@ export function PlaceComments({ placeId }: PlaceCommentsProps) {
         </div>
       )}
 
-      <CommentForm placeId={placeId} onSaved={() => {}} />
+      {isComposing ? (
+        <CommentForm placeId={placeId} onSaved={() => setComposing(false)} />
+      ) : (
+        <button type="button" className={styles.addPrompt} onClick={() => setComposing(true)}>
+          <span className="material-symbols-rounded">edit</span>
+          Добавить комментарий
+        </button>
+      )}
     </div>
   )
 }

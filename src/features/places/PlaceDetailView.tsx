@@ -7,6 +7,7 @@ import { ComingSoon } from '../../shared/ui/ComingSoon'
 import { ErrorState } from '../../shared/ui/ErrorState'
 import { Loader } from '../../shared/ui/Loader'
 import { PlaceComments } from './PlaceComments'
+import { SaveToMineButton } from './SaveToMineButton'
 import {
   useClearFeedbackMutation,
   useDeletePlaceMutation,
@@ -183,6 +184,8 @@ export function PlaceDetailView({ placeId, onClose }: PlaceDetailViewProps) {
             {place.rating > 0 ? place.rating.toFixed(1) : 'Оцените место'}
           </span>
         </div>
+
+        <SaveToMineButton place={place} />
 
         {place.note && <p className={styles.note}>«{place.note}»</p>}
 

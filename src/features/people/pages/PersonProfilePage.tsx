@@ -6,6 +6,7 @@ import { ErrorState } from '../../../shared/ui/ErrorState'
 import { Loader } from '../../../shared/ui/Loader'
 import { UnifiedPlaceCard } from '../../../shared/ui/UnifiedPlaceCard'
 import { PlaceDetailView } from '../../places/PlaceDetailView'
+import { SaveToMineButton } from '../../places/SaveToMineButton'
 import {
   useFollowMutation,
   useGetPersonPlacesQuery,
@@ -95,12 +96,14 @@ export function PersonProfilePage() {
         ) : (
           <div className={styles.list}>
             {places.map((place) => (
-              <UnifiedPlaceCard
-                key={place.id}
-                place={place}
-                onOpen={setOpenPlaceId}
-                onOpenOnMap={() => navigate('/map', { state: { focusPlaceId: place.id } })}
-              />
+              <div key={place.id} className={styles.placeItem}>
+                <UnifiedPlaceCard
+                  place={place}
+                  onOpen={setOpenPlaceId}
+                  onOpenOnMap={() => navigate('/map', { state: { focusPlaceId: place.id } })}
+                />
+                <SaveToMineButton place={place} />
+              </div>
             ))}
           </div>
         )}
