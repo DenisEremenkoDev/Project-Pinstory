@@ -33,7 +33,12 @@ export function MapPage() {
   // as the initial value directly rather than setState-in-an-effect.
   const focusState = location.state as MapFocusState | null
 
-  const [openPlaceId, setOpenPlaceId] = useState<string | null>(focusState?.focusPlaceId ?? null)
+  // A geo-jump lands on the map with the target pinned and centered — it does
+  // NOT open the place detail overlay on its own (that's a separate action,
+  // triggered by actually tapping the pin). Kept apart from openPlaceId so
+  // "show me where this is" and "open this place" stay two different things.
+  const [focusPlaceId] = useState<string | null>(focusState?.focusPlaceId ?? null)
+  const [openPlaceId, setOpenPlaceId] = useState<string | null>(null)
   const [isSearchOpen, setSearchOpen] = useState(false)
   const [isPickerOpen, setPickerOpen] = useState(false)
   const [isNotificationsTeaserOpen, setNotificationsTeaserOpen] = useState(false)
@@ -49,15 +54,14 @@ export function MapPage() {
   const { data: places, isLoading, isError, refetch } = useGetPlacesQuery()
   const { data: friendPlaces } = useGetPersonPlacesQuery(overlayFriendId ?? '', { skip: !overlayFriendId })
 
-  // A geo-jump to someone else's place (not comparison mode — see above):
-  // fetch just that one place so it can be shown as a single pin, focused,
-  // without pulling in the rest of its owner's places or the overlay UI.
-  // Skipped once comparison mode is on (that pin is already in `friendPlaces`)
-  // or the place turns out to already be one of the caller's own.
-  const isOwnFocusPlace = places?.some((place) => place.id === openPlaceId) ?? true
-  const { data: focusPlace } = useGetPlaceQuery(openPlaceId ?? '', {
-    skip: !openPlaceId || !!overlayFriendId || isOwnFocusPlace,
+  // A geo-jumped place's coordinates: reused from the already-loaded own list
+  // when possible, otherwise fetched — but only for someone else's place, not
+  // in comparison mode (that pin already lives in `friendPlaces`).
+  const focusPlaceFromOwn = places?.find((place) => place.id === focusPlaceId) ?? null
+  const { data: focusPlaceFetched } = useGetPlaceQuery(focusPlaceId ?? '', {
+    skip: !focusPlaceId || !!overlayFriendId || !!focusPlaceFromOwn,
   })
+  const focusPlace = focusPlaceFromOwn ?? focusPlaceFetched
 
   // Clear the router state once consumed so navigating back to /map (e.g.
   // via the bottom nav) doesn't keep re-focusing the same place. This only
@@ -82,15 +86,17 @@ export function MapPage() {
           place,
           variant: shared ? ('shared' as const) : ('friend-only' as const),
         })),
-        ...(focusPlace ? [{ place: focusPlace, variant: 'friend-only' as const }] : []),
+        ...(focusPlace && !focusPlaceFromOwn ? [{ place: focusPlace, variant: 'friend-only' as const }] : []),
       ],
     },
   ]
 
   const focusCoords =
-    focusPlace && openPlaceId === focusPlace.id
+    focusPlace && focusPlaceId === focusPlace.id
       ? { latitude: focusPlace.latitude, longitude: focusPlace.longitude }
       : null
+
+  const selectedPlaceId = openPlaceId ?? focusPlaceId
 
   function handleLocateMe() {
     setLocationError(null)
@@ -123,7 +129,7 @@ export function MapPage() {
       {hasRealMapsKey ? (
         <YandexMap
           layers={layers}
-          selectedPlaceId={openPlaceId}
+          selectedPlaceId={selectedPlaceId}
           onPinTap={(place) => setOpenPlaceId(place.id)}
           onMapClick={setPendingCoords}
           myLocation={myLocation}
@@ -202,7 +208,7 @@ export function MapPage() {
       {!hasRealMapsKey && (
         <MapPins
           layers={layers}
-          selectedPlaceId={openPlaceId}
+          selectedPlaceId={selectedPlaceId}
           onPinTap={(place) => setOpenPlaceId(place.id)}
           myLocation={myLocation}
         />
